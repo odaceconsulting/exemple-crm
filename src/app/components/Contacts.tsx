@@ -208,7 +208,7 @@ const Contacts = () => {
           </button>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 border-2 border-blue-700">
                 <Plus className="h-4 w-4" />
                 Nouveau Contact
               </button>

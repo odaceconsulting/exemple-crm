@@ -142,6 +142,9 @@ export default function App() {
     setMobileMenuOpen(false);
   };
 
+  // On mobile, show names when menu is open; on desktop, follow collapsed state
+  const shouldShowNames = typeof window !== 'undefined' && window.innerWidth < 768 ? mobileMenuOpen : !sidebarCollapsed;
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar - Hidden on mobile by default */}
@@ -149,8 +152,8 @@ export default function App() {
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800">
           <div className="flex items-center gap-3 flex-1">
-            {!sidebarCollapsed && <span className="text-xl font-semibold truncate">CRM Pro</span>}
-            {sidebarCollapsed && <LayoutDashboard className="h-6 w-6 mx-auto" />}
+            {shouldShowNames && <span className="text-xl font-semibold truncate">CRM Pro</span>}
+            {!shouldShowNames && <LayoutDashboard className="h-6 w-6 mx-auto" />}
           </div>
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -164,7 +167,7 @@ export default function App() {
         <nav className="flex-1 p-4 overflow-y-auto">
           {sidebarCategories.map((cat) => (
             <div key={cat.title} className="mb-4">
-              {!sidebarCollapsed && (
+              {shouldShowNames && (
                 <div className="px-2 mb-2 text-xs text-slate-400 uppercase font-semibold">{cat.title}</div>
               )}
               <div className="space-y-1 px-1">
@@ -180,12 +183,12 @@ export default function App() {
                           ? 'bg-blue-600 text-white'
                           : 'text-gray-300 hover:bg-slate-800 hover:text-white'
                       }`}
-                      title={sidebarCollapsed ? item.name : ''}
+                      title={!shouldShowNames ? item.name : ''}
                     >
                       <div className="flex items-center justify-center h-8 w-8 rounded-md bg-slate-800 text-slate-200">
                         <Icon className="h-4 w-4" />
                       </div>
-                      {!sidebarCollapsed && <span className="text-sm">{item.name}</span>}
+                      {shouldShowNames && <span className="text-sm">{item.name}</span>}
                     </button>
                   );
                 })}
@@ -203,14 +206,14 @@ export default function App() {
                 ? 'bg-blue-600 text-white'
                 : 'text-gray-300 hover:bg-slate-800 hover:text-white'
             }`}
-            title={sidebarCollapsed ? 'Paramètres' : ''}
+            title={!shouldShowNames ? 'Paramètres' : ''}
           >
             <SettingsIcon className="h-5 w-5 flex-shrink-0" />
-            {!sidebarCollapsed && <span className="text-sm">Paramètres</span>}
+            {shouldShowNames && <span className="text-sm">Paramètres</span>}
           </button>
-          <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-slate-800 hover:text-white transition-colors" title={sidebarCollapsed ? 'Déconnexion' : ''}>
+          <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-slate-800 hover:text-white transition-colors" title={!shouldShowNames ? 'Déconnexion' : ''}>
             <LogOut className="h-5 w-5 flex-shrink-0" />
-            {!sidebarCollapsed && <span className="text-sm">Déconnexion</span>}
+            {shouldShowNames && <span className="text-sm">Déconnexion</span>}
           </button>
         </div>
       </aside>

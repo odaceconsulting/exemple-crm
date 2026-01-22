@@ -277,7 +277,7 @@ const Quotes = () => {
         </div>
         <button
           onClick={() => setShowNewQuote(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 border-2 border-blue-700"
         >
           <Plus className="h-5 w-5" />
           Nouveau devis
