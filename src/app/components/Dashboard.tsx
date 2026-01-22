@@ -14,18 +14,34 @@ import {
   ArrowDownRight,
   FileText,
   Target,
-  Clock
+  Clock,
+  Search,
+  Filter,
+  X
 } from 'lucide-react';
 import { AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const Dashboard = () => {
   const [showNewOpportunity, setShowNewOpportunity] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [opportunityForm, setOpportunityForm] = useState({
     title: '',
     company: '',
     value: '',
     closeDate: ''
   });
+
+  // Filter states
+  const [filters, setFilters] = useState({
+    searchQuery: '',
+    type: 'all', // all, companies, contacts, opportunities, projects
+    status: 'all', // all, active, completed, pending
+    dateRange: 'all', // all, today, week, month
+    minValue: '',
+    maxValue: ''
+  });
+
+  const [activeFilters, setActiveFilters] = useState(false);
   const handleCreateOpportunity = () => {
     if (opportunityForm.title && opportunityForm.company) {
       // Store the new opportunity in localStorage for Pipeline to retrieve
@@ -52,6 +68,20 @@ const Dashboard = () => {
       alert('Veuillez remplir les champs requis (Titre et Entreprise)');
     }
   };
+
+  const handleResetFilters = () => {
+    setFilters({
+      searchQuery: '',
+      type: 'all',
+      status: 'all',
+      dateRange: 'all',
+      minValue: '',
+      maxValue: ''
+    });
+    setActiveFilters(false);
+  };
+
+  const hasActiveFilters = filters.searchQuery !== '' || filters.type !== 'all' || filters.status !== 'all' || filters.dateRange !== 'all' || filters.minValue !== '' || filters.maxValue !== '';
 
   // KPI Data
   const kpiData = [
@@ -145,11 +175,156 @@ const Dashboard = () => {
           </button>
           <button 
             onClick={() => setShowNewOpportunity(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors border-2 border-blue-700">
+            className="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors border-2 border-blue-700">
             + Nouvelle Opportunité
           </button>
         </div>
       </div>
+
+      {/* Advanced Search and Filters */}
+      <Card className="border-0 shadow-sm bg-gradient-to-r from-slate-50 to-blue-50">
+        <CardContent className="p-6">
+          {/* Main Search Bar */}
+          <div className="flex gap-3 mb-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Rechercher par nom, entreprise, contact..."
+                value={filters.searchQuery}
+                onChange={(e) => {
+                  setFilters({...filters, searchQuery: e.target.value});
+                  setActiveFilters(true);
+                }}
+                className="pl-10 bg-white border-2 border-gray-300 focus:border-indigo-500 h-11"
+              />
+            </div>
+            <button 
+              onClick={() => setShowFilters(!showFilters)}
+              className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all border-2 ${
+                showFilters 
+                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' 
+                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}>
+              <Filter className="h-5 w-5" />
+              <span className="font-medium">Filtres</span>
+              {hasActiveFilters && <span className="ml-1 px-2 py-0.5 bg-red-500 text-white rounded-full text-xs font-bold">!</span>}
+            </button>
+            {hasActiveFilters && (
+              <button
+                onClick={handleResetFilters}
+                className="px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2 transition-all">
+                <X className="h-4 w-4" />
+                <span className="font-medium">Réinitialiser</span>
+              </button>
+            )}
+          </div>
+
+          {/* Filter Options */}
+          {showFilters && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 pt-4 border-t border-gray-200">
+              {/* Type Filter */}
+              <div>
+                <Label className="text-sm font-semibold text-gray-700 mb-2 block">Type</Label>
+                <select
+                  value={filters.type}
+                  onChange={(e) => {
+                    setFilters({...filters, type: e.target.value});
+                    setActiveFilters(true);
+                  }}
+                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-indigo-500 focus:outline-none bg-white">
+                  <option value="all">Tous les types</option>
+                  <option value="companies">Entreprises</option>
+                  <option value="contacts">Contacts</option>
+                  <option value="opportunities">Opportunités</option>
+                  <option value="projects">Projets</option>
+                </select>
+              </div>
+
+              {/* Status Filter */}
+              <div>
+                <Label className="text-sm font-semibold text-gray-700 mb-2 block">Statut</Label>
+                <select
+                  value={filters.status}
+                  onChange={(e) => {
+                    setFilters({...filters, status: e.target.value});
+                    setActiveFilters(true);
+                  }}
+                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-indigo-500 focus:outline-none bg-white">
+                  <option value="all">Tous les statuts</option>
+                  <option value="active">Actif</option>
+                  <option value="pending">En attente</option>
+                  <option value="completed">Complété</option>
+                  <option value="on-hold">Suspendu</option>
+                </select>
+              </div>
+
+              {/* Date Range Filter */}
+              <div>
+                <Label className="text-sm font-semibold text-gray-700 mb-2 block">Période</Label>
+                <select
+                  value={filters.dateRange}
+                  onChange={(e) => {
+                    setFilters({...filters, dateRange: e.target.value});
+                    setActiveFilters(true);
+                  }}
+                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-indigo-500 focus:outline-none bg-white">
+                  <option value="all">Toutes les périodes</option>
+                  <option value="today">Aujourd'hui</option>
+                  <option value="week">Cette semaine</option>
+                  <option value="month">Ce mois</option>
+                  <option value="quarter">Ce trimestre</option>
+                </select>
+              </div>
+
+              {/* Min Value Filter */}
+              <div>
+                <Label className="text-sm font-semibold text-gray-700 mb-2 block">Montant min (€)</Label>
+                <Input
+                  type="number"
+                  placeholder="0"
+                  value={filters.minValue}
+                  onChange={(e) => {
+                    setFilters({...filters, minValue: e.target.value});
+                    setActiveFilters(true);
+                  }}
+                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm"
+                />
+              </div>
+
+              {/* Max Value Filter */}
+              <div>
+                <Label className="text-sm font-semibold text-gray-700 mb-2 block">Montant max (€)</Label>
+                <Input
+                  type="number"
+                  placeholder="1000000"
+                  value={filters.maxValue}
+                  onChange={(e) => {
+                    setFilters({...filters, maxValue: e.target.value});
+                    setActiveFilters(true);
+                  }}
+                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Active Filters Summary */}
+          {hasActiveFilters && (
+            <div className="mt-4 p-3 bg-blue-50 border-l-4 border-indigo-500 rounded">
+              <p className="text-sm text-indigo-900">
+                <span className="font-semibold">Filtres actifs:</span> 
+                {filters.searchQuery && ` Recherche: "${filters.searchQuery}"`}
+                {filters.type !== 'all' && ` • Type: ${filters.type}`}
+                {filters.status !== 'all' && ` • Statut: ${filters.status}`}
+                {filters.dateRange !== 'all' && ` • Période: ${filters.dateRange}`}
+                {filters.minValue && ` • Min: ${filters.minValue}€`}
+                {filters.maxValue && ` • Max: ${filters.maxValue}€`}
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* New Opportunity Dialog */}
       <Dialog open={showNewOpportunity} onOpenChange={setShowNewOpportunity}>
