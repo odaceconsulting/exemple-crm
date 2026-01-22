@@ -39,7 +39,7 @@ type PageType = 'dashboard' | 'companies' | 'contacts' | 'pipeline' | 'documents
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<PageType>('dashboard');
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -144,8 +144,8 @@ export default function App() {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <aside className={`${sidebarCollapsed ? 'w-20' : 'w-64'} bg-slate-900 text-white flex flex-col transition-all duration-300 fixed md:relative h-full z-40 md:z-auto`}>
+      {/* Sidebar - Hidden on mobile by default */}
+      <aside className={`${sidebarCollapsed ? 'w-20' : 'w-64'} ${mobileMenuOpen ? 'w-64 md:w-20' : ''} bg-slate-900 text-white flex flex-col transition-all duration-300 ${mobileMenuOpen ? 'fixed' : 'hidden'} md:relative h-full z-40 md:z-auto md:flex`}>
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800">
           <div className="flex items-center gap-3 flex-1">
@@ -216,54 +216,51 @@ export default function App() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto flex flex-col">
+      <main className="flex-1 overflow-auto flex flex-col w-full">
         {/* Top Bar */}
-        <div className="h-16 bg-white border-b border-gray-200 px-6 flex items-center justify-between sticky top-0 z-30">
-          <div className="flex items-center gap-4 flex-1">
+        <div className="h-14 md:h-16 bg-white border-b border-gray-200 px-3 md:px-6 flex items-center justify-between sticky top-0 z-30">
+          <div className="flex items-center gap-2 md:gap-4 flex-1">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="md:hidden p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
-            <div className="hidden md:flex flex-1 max-w-md">
+            <div className="hidden md:flex flex-1 max-w-md min-w-0">
               <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   type="text"
                   placeholder="Rechercher..."
                   value={searchQuery}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-gray-50 border border-gray-200"
+                  className="pl-9 bg-gray-50 border border-gray-200 text-sm"
                 />
               </div>
             </div>
           </div>
 
           {/* User Menu */}
-          <div className="flex items-center gap-6">
-            <button className="p-2 relative hover:bg-gray-100 rounded-lg transition-colors">
-              <Bell className="h-5 w-5 text-gray-600" />
+          <div className="flex items-center gap-3 md:gap-6">
+            <button className="p-1.5 md:p-2 relative hover:bg-gray-100 rounded-lg transition-colors">
+              <Bell className="h-4 md:h-5 w-4 md:w-5 text-gray-600" />
               <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full" />
             </button>
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <User className="h-5 w-5 text-gray-600" />
+            <button className="p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors hidden sm:block">
+              <User className="h-4 md:h-5 w-4 md:w-5 text-gray-600" />
             </button>
           </div>
         </div>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto w-full">
           {renderPage()}
         </div>
       </main>
 
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 md:hidden z-30"
-          onClick={() => setMobileMenuOpen(false)}
-        />
+        <div className="fixed inset-0 bg-black/50 md:hidden z-30" onClick={() => setMobileMenuOpen(false)} />
       )}
     </div>
   );

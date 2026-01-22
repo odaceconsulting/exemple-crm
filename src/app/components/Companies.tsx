@@ -186,11 +186,11 @@ const Companies = () => {
                 Nouvelle Compagnie
               </button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-lg md:max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Ajouter une Compagnie</DialogTitle>
+                <DialogTitle className="text-lg md:text-xl">Ajouter une Compagnie</DialogTitle>
               </DialogHeader>
-              <div className="grid grid-cols-2 gap-4 py-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 py-4 max-h-[60vh] overflow-y-auto">
                 <div className="space-y-2">
                   <Label htmlFor="company-name">Nom de l'entreprise *</Label>
                   <Input id="company-name" placeholder="Acme Corp" />
@@ -370,11 +370,11 @@ const Companies = () => {
         {/* Edit Company Dialog */}
         {selectedCompany && (
           <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-lg md:max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Modifier la Compagnie</DialogTitle>
+                <DialogTitle className="text-lg md:text-xl">Modifier la Compagnie</DialogTitle>
               </DialogHeader>
-              <div className="grid grid-cols-2 gap-4 py-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 py-4 max-h-[60vh] overflow-y-auto">
                 <div className="space-y-2">
                   <Label htmlFor="edit-company-name">Nom de l'entreprise *</Label>
                   <Input id="edit-company-name" value={editForm.name || ''} onChange={(e) => setEditForm({...editForm, name: e.target.value})} />

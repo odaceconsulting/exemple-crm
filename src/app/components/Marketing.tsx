@@ -239,11 +239,11 @@ const Marketing = () => {
               Nouvelle Campagne
             </button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-lg md:max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Créer une Campagne</DialogTitle>
+              <DialogTitle className="text-lg md:text-xl">Créer une Campagne</DialogTitle>
             </DialogHeader>
-            <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 py-4 max-h-[60vh] overflow-y-auto">
               <div className="space-y-2 col-span-2">
                 <Label htmlFor="campaign-name">Nom de la campagne *</Label>
                 <Input id="campaign-name" placeholder="Lancement Nouveau Produit" />
@@ -614,11 +614,11 @@ const Marketing = () => {
         {/* Campaign Details Dialog */}
         {selectedCampaign && (
           <Dialog open={showCampaignDialog} onOpenChange={setShowCampaignDialog}>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-lg md:max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Détails de la campagne</DialogTitle>
+                <DialogTitle className="text-lg md:text-xl">Détails de la campagne</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4 max-h-96 overflow-y-auto py-2">
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto py-2">
                 <div className="flex items-start justify-between">
                   <div>
                     <h2 className="text-xl font-bold text-gray-900">{selectedCampaign.name}</h2>

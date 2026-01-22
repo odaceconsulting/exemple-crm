@@ -284,11 +284,11 @@ const Documents = () => {
                 Upload Document
               </button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-lg md:max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Télécharger un Document</DialogTitle>
+                <DialogTitle className="text-lg md:text-xl">Télécharger un Document</DialogTitle>
               </DialogHeader>
-              <div className="py-4 space-y-6">
+              <div className="py-4 space-y-6 max-h-[60vh] overflow-y-auto">
                 {/* Drag and Drop Zone */}
                 <div
                   className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
