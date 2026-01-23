@@ -288,48 +288,48 @@ const Projects = () => {
 
       {/* Tabs Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-8 bg-transparent border-0 p-0">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 my-6 sm:my-8 mb-12 sm:mb-16 md:mb-20 bg-transparent border-0 p-0">
           <TabsTrigger 
             value="overview" 
             className="flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
           >
             <BarChart3 className="h-4 w-4" />
-            <span className="hidden sm:inline">Vue d'ensemble</span>
+            <span className="inline">Vue d'ensemble</span>
           </TabsTrigger>
           <TabsTrigger 
             value="projects" 
             className="flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
           >
             <Briefcase className="h-4 w-4" />
-            <span className="hidden sm:inline">Projets</span>
+            <span className="inline">Projets</span>
           </TabsTrigger>
           <TabsTrigger 
             value="resources" 
             className="flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
           >
             <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Ressources</span>
+            <span className="inline">Ressources</span>
           </TabsTrigger>
           <TabsTrigger 
             value="services" 
             className="flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
           >
             <GitBranch className="h-4 w-4" />
-            <span className="hidden sm:inline">Prestations</span>
+            <span className="inline">Prestations</span>
           </TabsTrigger>
           <TabsTrigger 
             value="tasks" 
             className="flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
           >
             <Target className="h-4 w-4" />
-            <span className="hidden sm:inline">Tâches</span>
+            <span className="inline">Tâches</span>
           </TabsTrigger>
           <TabsTrigger 
             value="finance" 
             className="flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
           >
             <DollarSign className="h-4 w-4" />
-            <span className="hidden sm:inline">Finance</span>
+            <span className="inline">Finance</span>
           </TabsTrigger>
         </TabsList>
 

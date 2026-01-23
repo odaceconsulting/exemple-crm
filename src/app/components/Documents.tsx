@@ -472,9 +472,9 @@ const Documents = () => {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="mb-8">
+      <div className="my-6 sm:my-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-2 bg-transparent border-0 p-0">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-2 mb-20 sm:mb-24 md:mb-28 lg:mb-36 bg-transparent border-0 p-0">
             <TabsTrigger 
               value="all" 
               className={`flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 ${
@@ -484,7 +484,7 @@ const Documents = () => {
               }`}
             >
               <FileText className="h-4 w-4" />
-              <span className="hidden sm:inline">Tous</span>
+              <span className="inline">Tous</span>
             </TabsTrigger>
             <TabsTrigger 
               value="recent" 
@@ -495,7 +495,7 @@ const Documents = () => {
               }`}
             >
               <Clock className="h-4 w-4" />
-              <span className="hidden sm:inline">Récents</span>
+              <span className="inline">Récents</span>
             </TabsTrigger>
             <TabsTrigger 
               value="approved" 
@@ -506,7 +506,7 @@ const Documents = () => {
               }`}
             >
               <CheckCircle className="h-4 w-4" />
-              <span className="hidden sm:inline">Approuvés</span>
+              <span className="inline">Approuvés</span>
             </TabsTrigger>
             <TabsTrigger 
               value="pending" 
@@ -517,7 +517,7 @@ const Documents = () => {
               }`}
             >
               <AlertCircle className="h-4 w-4" />
-              <span className="hidden sm:inline">Attente</span>
+              <span className="inline">Attente</span>
             </TabsTrigger>
             <TabsTrigger 
               value="shared" 
@@ -528,7 +528,7 @@ const Documents = () => {
               }`}
             >
               <Share2 className="h-4 w-4" />
-              <span className="hidden sm:inline">Partagés</span>
+              <span className="inline">Partagés</span>
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -921,34 +921,34 @@ const Documents = () => {
         <Card className="border-0 shadow-xl">
           <CardContent className="p-0">
             <Tabs defaultValue="workflow" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-2 bg-transparent border-0 p-4">
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-2 my-6 sm:my-8 mb-16 sm:mb-20 md:mb-24 lg:mb-32 bg-transparent border-0 p-4">
                 <TabsTrigger 
                   value="workflow" 
                   className="flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
                 >
                   <FileCheck className="h-4 w-4" />
-                  <span className="hidden sm:inline">Workflows</span>
+                  <span className="inline">Workflows</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="versioning" 
                   className="flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
                 >
                   <History className="h-4 w-4" />
-                  <span className="hidden sm:inline">Versions</span>
+                  <span className="inline">Versions</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="access" 
                   className="flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
                 >
                   <Lock className="h-4 w-4" />
-                  <span className="hidden sm:inline">Accès</span>
+                  <span className="inline">Accès</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="classification" 
                   className="flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
                 >
                   <Zap className="h-4 w-4" />
-                  <span className="hidden sm:inline">Classification</span>
+                  <span className="inline">Classification</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -976,18 +976,18 @@ const Documents = () => {
                     }
                   ].map((doc, idx) => (
                     <Card key={idx} className="border-2 border-gray-200 shadow-md hover:shadow-lg transition-all">
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between mb-6">
-                          <div className="flex items-center gap-4">
-                            <div className="p-3 bg-gradient-to-br from-indigo-100 to-blue-100 rounded-lg">
+                      <CardContent className="p-4 sm:p-6">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+                          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                            <div className="p-3 bg-gradient-to-br from-indigo-100 to-blue-100 rounded-lg flex-shrink-0">
                               <FileText className="h-6 w-6 text-indigo-600" />
                             </div>
-                            <div>
-                              <h3 className="font-bold text-gray-900 text-lg">{doc.name}</h3>
-                              <p className="text-sm text-gray-500">Envoyé par {doc.uploadedBy}</p>
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-bold text-gray-900 text-base sm:text-lg break-words">{doc.name}</h3>
+                              <p className="text-xs sm:text-sm text-gray-500">Envoyé par {doc.uploadedBy}</p>
                             </div>
                           </div>
-                          <Badge className={doc.status === 'approved' ? 'bg-emerald-100 text-emerald-800 text-sm font-bold px-3 py-1' : 'bg-amber-100 text-amber-800 text-sm font-bold px-3 py-1'}>
+                          <Badge className={doc.status === 'approved' ? 'bg-emerald-100 text-emerald-800 text-xs sm:text-sm font-bold px-3 py-1 flex-shrink-0' : 'bg-amber-100 text-amber-800 text-xs sm:text-sm font-bold px-3 py-1 flex-shrink-0'}>
                             {doc.status === 'approved' ? '✓ Approuvé' : '⏳ En attente'}
                           </Badge>
                         </div>
@@ -1021,29 +1021,29 @@ const Documents = () => {
               </TabsContent>
 
               {/* Versioning Tab */}
-              <TabsContent value="versioning" className="p-8 space-y-6 bg-white">
-                <div className="space-y-4">
+              <TabsContent value="versioning" className="p-4 sm:p-8 space-y-4 sm:space-y-6 bg-white">
+                <div className="space-y-3 sm:space-y-4">
                   {[...Array(3)].map((_, idx) => (
                     <Card key={idx} className={`border-2 shadow-md hover:shadow-lg transition-all ${idx === 0 ? 'border-indigo-300 bg-gradient-to-r from-indigo-50 to-blue-50' : 'border-gray-200'}`}>
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4 flex-1">
-                            <div className={`p-3 rounded-lg ${idx === 0 ? 'bg-indigo-100' : 'bg-gray-100'}`}>
+                      <CardContent className="p-4 sm:p-6">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                          <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                            <div className={`p-3 rounded-lg flex-shrink-0 ${idx === 0 ? 'bg-indigo-100' : 'bg-gray-100'}`}>
                               <FileJson className={`h-6 w-6 ${idx === 0 ? 'text-indigo-600' : 'text-gray-600'}`} />
                             </div>
-                            <div>
-                              <p className="font-bold text-gray-900 text-lg">Version {3 - idx}</p>
-                              <p className={`text-sm ${idx === 0 ? 'text-indigo-600 font-semibold' : 'text-gray-500'}`}>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-bold text-gray-900 text-base sm:text-lg">Version {3 - idx}</p>
+                              <p className={`text-xs sm:text-sm ${idx === 0 ? 'text-indigo-600 font-semibold' : 'text-gray-500'}`}>
                                 {idx === 0 ? '★ Version actuelle' : `Modifié il y a ${idx} jour${idx > 1 ? 's' : ''}`}
                               </p>
                             </div>
                           </div>
-                          <div className="flex gap-2">
-                            <button className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg transition-all hover:shadow-md">
+                          <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0">
+                            <button className="px-3 sm:px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold rounded-lg transition-all hover:shadow-md w-full sm:w-auto">
                               Consulter
                             </button>
                             {idx !== 0 && (
-                              <button className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-900 text-sm font-bold rounded-lg transition-all">
+                              <button className="px-3 sm:px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-900 text-xs sm:text-sm font-bold rounded-lg transition-all w-full sm:w-auto">
                                 Restaurer
                               </button>
                             )}

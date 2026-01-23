@@ -206,9 +206,9 @@ const SettingsComponent = () => {
       </div>
 
       {/* Tabs */}
-      <Card className="border-0 shadow-md">
+      <Card className="border-0 shadow-md my-6 sm:my-8">
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className="w-full gap-2 bg-transparent border-0 p-4 rounded-none">
+          <TabsList className="w-full gap-2 bg-transparent border-0 p-4 rounded-none flex flex-wrap">
             <TabsTrigger 
               value="general" 
               className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"

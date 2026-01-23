@@ -220,8 +220,8 @@ const Accounting = () => {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-8">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-2 bg-transparent border-0 p-0">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full my-6 sm:my-8">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-2 mb-32 sm:mb-80 md:mb-80 lg:mb-72 bg-transparent border-0 p-0">
           {(['sales', 'purchases', 'expenses', 'receipts'] as const).map(tab => (
             <TabsTrigger 
               key={tab} 
