@@ -498,9 +498,40 @@ const Quotes = () => {
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>Voir</DropdownMenuItem>
-                      <DropdownMenuItem>Modifier</DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-600">Supprimer</DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          setSelectedQuote(quote);
+                          setShowQuoteDetails(true);
+                        }}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Voir
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          setSelectedQuote(quote);
+                          setEditQuoteForm({
+                            company: quote.company,
+                            contact: quote.contact,
+                            expiryDate: quote.expiryDate,
+                            taxRate: quote.taxRate.toString(),
+                            notes: quote.notes,
+                            items: quote.items
+                          });
+                          setIsEditingQuote(true);
+                          setShowQuoteDetails(true);
+                        }}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Modifier
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="text-red-600"
+                        onClick={() => handleDeleteQuote(quote.id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Supprimer
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -667,9 +698,40 @@ const Quotes = () => {
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>Voir</DropdownMenuItem>
-                            <DropdownMenuItem>Modifier</DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600">Supprimer</DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setSelectedQuote(quote);
+                                setShowQuoteDetails(true);
+                              }}
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              Voir
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setSelectedQuote(quote);
+                                setEditQuoteForm({
+                                  company: quote.company,
+                                  contact: quote.contact,
+                                  expiryDate: quote.expiryDate,
+                                  taxRate: quote.taxRate.toString(),
+                                  notes: quote.notes,
+                                  items: quote.items
+                                });
+                                setIsEditingQuote(true);
+                                setShowQuoteDetails(true);
+                              }}
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Modifier
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="text-red-600"
+                              onClick={() => handleDeleteQuote(quote.id)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Supprimer
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>

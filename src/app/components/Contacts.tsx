@@ -30,8 +30,19 @@ import {
   Grid3x3,
   List,
   Kanban,
-  Send
+  Send,
+  Eye
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/app/components/ui/alert-dialog';
 
 interface Contact {
   id: number;
@@ -52,6 +63,21 @@ const Contacts = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'kanban'>('grid');
   const [openActionsFor, setOpenActionsFor] = useState<number | null>(null);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [showContactDetails, setShowContactDetails] = useState(false);
+  const [isEditingContact, setIsEditingContact] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState({
+    firstName: '',
+    lastName: '',
+    position: '',
+    company: '',
+    email: '',
+    phone: '',
+    mobile: '',
+    status: 'lead' as const
+  });
 
   const contacts: Contact[] = [
     {
@@ -165,6 +191,31 @@ const Contacts = () => {
     contact.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
     contact.position.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleDeleteContact = (id: number) => {
+    setDeleteTarget(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget !== null) {
+      // Ici on ferait appel à une API pour supprimer
+      setShowDeleteConfirm(false);
+      setDeleteTarget(null);
+      setShowContactDetails(false);
+      alert('Contact supprimé avec succès');
+    }
+  };
+
+  const handleEditContact = () => {
+    if (selectedContact && editForm.firstName && editForm.lastName && editForm.email) {
+      // Ici on ferait appel à une API pour modifier
+      setIsEditingContact(false);
+      setShowContactDetails(false);
+      setSelectedContact(null);
+      alert('Contact modifié avec succès');
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -408,8 +459,42 @@ const Contacts = () => {
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>Éditer</DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-600">Supprimer</DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          setSelectedContact(contact);
+                          setShowContactDetails(true);
+                        }}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Voir
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          setSelectedContact(contact);
+                          setEditForm({
+                            firstName: contact.firstName,
+                            lastName: contact.lastName,
+                            position: contact.position,
+                            company: contact.company,
+                            email: contact.email,
+                            phone: contact.phone,
+                            mobile: contact.mobile,
+                            status: contact.status
+                          });
+                          setIsEditingContact(true);
+                          setShowContactDetails(true);
+                        }}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Éditer
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="text-red-600"
+                        onClick={() => handleDeleteContact(contact.id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Supprimer
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -540,8 +625,42 @@ const Contacts = () => {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>Éditer</DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">Supprimer</DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              setSelectedContact(contact);
+                              setShowContactDetails(true);
+                            }}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            Voir
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              setSelectedContact(contact);
+                              setEditForm({
+                                firstName: contact.firstName,
+                                lastName: contact.lastName,
+                                position: contact.position,
+                                company: contact.company,
+                                email: contact.email,
+                                phone: contact.phone,
+                                mobile: contact.mobile,
+                                status: contact.status
+                              });
+                              setIsEditingContact(true);
+                              setShowContactDetails(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Éditer
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="text-red-600"
+                            onClick={() => handleDeleteContact(contact.id)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Supprimer
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </td>
@@ -599,8 +718,42 @@ const Contacts = () => {
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>Éditer</DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600">Supprimer</DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setSelectedContact(contact);
+                                setShowContactDetails(true);
+                              }}
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              Voir
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setSelectedContact(contact);
+                                setEditForm({
+                                  firstName: contact.firstName,
+                                  lastName: contact.lastName,
+                                  position: contact.position,
+                                  company: contact.company,
+                                  email: contact.email,
+                                  phone: contact.phone,
+                                  mobile: contact.mobile,
+                                  status: contact.status
+                                });
+                                setIsEditingContact(true);
+                                setShowContactDetails(true);
+                              }}
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Éditer
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="text-red-600"
+                              onClick={() => handleDeleteContact(contact.id)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Supprimer
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -639,6 +792,217 @@ const Contacts = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* CONTACT DETAILS DIALOG */}
+      <Dialog open={showContactDetails} onOpenChange={setShowContactDetails}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {isEditingContact ? 'Modifier le contact' : 'Détails du contact'}
+            </DialogTitle>
+          </DialogHeader>
+
+          {!isEditingContact && selectedContact ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-16 w-16">
+                  <AvatarFallback className="bg-blue-100 text-blue-600 font-bold text-lg">
+                    {getInitials(selectedContact.firstName, selectedContact.lastName)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">{selectedContact.firstName} {selectedContact.lastName}</h2>
+                  <p className="text-gray-600">{selectedContact.position}</p>
+                  <Badge className={`mt-2 ${
+                    selectedContact.status === 'client' ? 'bg-green-100 text-green-700' :
+                    selectedContact.status === 'lead' ? 'bg-blue-100 text-blue-700' :
+                    'bg-orange-100 text-orange-700'
+                  }`}>
+                    {selectedContact.status === 'client' ? '🟢 Client' : 
+                     selectedContact.status === 'lead' ? '🔵 Lead' : 
+                     '🟠 Partenaire'}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 border-t border-gray-200 pt-4">
+                <div>
+                  <p className="text-xs text-gray-600 uppercase font-bold">Entreprise</p>
+                  <p className="text-gray-900 font-medium">{selectedContact.company}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 uppercase font-bold">Score</p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-[60px]">
+                      <div
+                        className={`h-2 rounded-full ${
+                          selectedContact.score >= 80 ? 'bg-green-500' : 
+                          selectedContact.score >= 60 ? 'bg-orange-500' : 'bg-red-500'
+                        }`}
+                        style={{ width: `${selectedContact.score}%` }}
+                      ></div>
+                    </div>
+                    <span className={`text-sm font-medium ${getScoreColor(selectedContact.score)}`}>
+                      {selectedContact.score}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 border-t border-gray-200 pt-4">
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-gray-400" />
+                  <span className="text-gray-900">{selectedContact.email}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-gray-400" />
+                  <span className="text-gray-900">{selectedContact.phone}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="h-4 w-4 text-gray-400" />
+                  <span className="text-gray-900">{selectedContact.mobile}</span>
+                </div>
+              </div>
+
+              <div className="flex gap-2 justify-end border-t border-gray-200 pt-4">
+                <Button variant="outline" onClick={() => setShowContactDetails(false)}>
+                  Fermer
+                </Button>
+                <Button onClick={() => {
+                  setEditForm({
+                    firstName: selectedContact.firstName,
+                    lastName: selectedContact.lastName,
+                    position: selectedContact.position,
+                    company: selectedContact.company,
+                    email: selectedContact.email,
+                    phone: selectedContact.phone,
+                    mobile: selectedContact.mobile,
+                    status: selectedContact.status
+                  });
+                  setIsEditingContact(true);
+                }}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Modifier
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Prénom</Label>
+                  <Input
+                    value={editForm.firstName}
+                    onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Nom</Label>
+                  <Input
+                    value={editForm.lastName}
+                    onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label>Poste</Label>
+                <Input
+                  value={editForm.position}
+                  onChange={(e) => setEditForm({ ...editForm, position: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label>Entreprise</Label>
+                <Input
+                  value={editForm.company}
+                  onChange={(e) => setEditForm({ ...editForm, company: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Email</Label>
+                  <Input
+                    type="email"
+                    value={editForm.email}
+                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Téléphone</Label>
+                  <Input
+                    value={editForm.phone}
+                    onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label>Mobile/WhatsApp</Label>
+                <Input
+                  value={editForm.mobile}
+                  onChange={(e) => setEditForm({ ...editForm, mobile: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label>Statut</Label>
+                <select
+                  value={editForm.status}
+                  onChange={(e) => setEditForm({ ...editForm, status: e.target.value as 'lead' | 'client' | 'partner' })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md mt-1 bg-white"
+                >
+                  <option value="lead">Lead</option>
+                  <option value="client">Client</option>
+                  <option value="partner">Partenaire</option>
+                </select>
+              </div>
+
+              <div className="flex gap-2 justify-end border-t border-gray-200 pt-4">
+                <Button variant="outline" onClick={() => {
+                  setIsEditingContact(false);
+                  setShowContactDetails(false);
+                }}>
+                  Annuler
+                </Button>
+                <Button onClick={handleEditContact}>
+                  Enregistrer
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* DELETE CONFIRMATION DIALOG */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer ce contact ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Le contact sera définitivement supprimé.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Button } from '@/app/components/ui/button';
+import { Badge } from '@/app/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,8 +23,21 @@ import {
   MoreVertical,
   Grid3x3,
   List,
-  Kanban
+  Kanban,
+  Eye,
+  Edit,
+  Trash2
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/app/components/ui/alert-dialog';
 
 interface Company {
   id: number;
@@ -45,6 +59,23 @@ const Companies = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'kanban'>('grid');
   const [openActionsFor, setOpenActionsFor] = useState<number | null>(null);
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [showCompanyDetails, setShowCompanyDetails] = useState(false);
+  const [isEditingCompany, setIsEditingCompany] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    industry: '',
+    revenue: '',
+    employees: '',
+    phone: '',
+    email: '',
+    website: '',
+    address: '',
+    contactPerson: '',
+    status: 'prospect' as 'active' | 'prospect' | 'inactive'
+  });
 
   const [companies, setCompanies] = useState([
     {
@@ -132,6 +163,37 @@ const Companies = () => {
       lastContact: '2026-01-08'
     }
   ]);
+
+  const handleDeleteCompany = (id: number) => {
+    setDeleteTarget(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget !== null) {
+      setCompanies(companies.filter(c => c.id !== deleteTarget));
+      setShowDeleteConfirm(false);
+      setDeleteTarget(null);
+      setShowCompanyDetails(false);
+    }
+  };
+
+  const handleEditCompany = () => {
+    if (selectedCompany && editForm.name && editForm.email) {
+      const updatedCompanies = companies.map(c =>
+        c.id === selectedCompany.id
+          ? {
+              ...c,
+              ...editForm,
+            }
+          : c
+      );
+      setCompanies(updatedCompanies);
+      setIsEditingCompany(false);
+      setShowCompanyDetails(false);
+      setSelectedCompany(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 p-4 md:p-8">
@@ -337,8 +399,44 @@ const Companies = () => {
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>Éditer</DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-600">Supprimer</DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          setSelectedCompany(company);
+                          setShowCompanyDetails(true);
+                        }}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Voir
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          setSelectedCompany(company);
+                          setEditForm({
+                            name: company.name,
+                            industry: company.industry,
+                            revenue: company.revenue,
+                            employees: company.employees,
+                            phone: company.phone,
+                            email: company.email,
+                            website: company.website,
+                            address: company.address,
+                            contactPerson: company.contactPerson,
+                            status: company.status
+                          });
+                          setIsEditingCompany(true);
+                          setShowCompanyDetails(true);
+                        }}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Éditer
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="text-red-600"
+                        onClick={() => handleDeleteCompany(company.id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Supprimer
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -441,8 +539,44 @@ const Companies = () => {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>Éditer</DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">Supprimer</DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              setSelectedCompany(company);
+                              setShowCompanyDetails(true);
+                            }}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            Voir
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              setSelectedCompany(company);
+                              setEditForm({
+                                name: company.name,
+                                industry: company.industry,
+                                revenue: company.revenue,
+                                employees: company.employees,
+                                phone: company.phone,
+                                email: company.email,
+                                website: company.website,
+                                address: company.address,
+                                contactPerson: company.contactPerson,
+                                status: company.status
+                              });
+                              setIsEditingCompany(true);
+                              setShowCompanyDetails(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Éditer
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="text-red-600"
+                            onClick={() => handleDeleteCompany(company.id)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Supprimer
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </td>
@@ -491,8 +625,44 @@ const Companies = () => {
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>Éditer</DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600">Supprimer</DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setSelectedCompany(company);
+                                setShowCompanyDetails(true);
+                              }}
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              Voir
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setSelectedCompany(company);
+                                setEditForm({
+                                  name: company.name,
+                                  industry: company.industry,
+                                  revenue: company.revenue,
+                                  employees: company.employees,
+                                  phone: company.phone,
+                                  email: company.email,
+                                  website: company.website,
+                                  address: company.address,
+                                  contactPerson: company.contactPerson,
+                                  status: company.status
+                                });
+                                setIsEditingCompany(true);
+                                setShowCompanyDetails(true);
+                              }}
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Éditer
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="text-red-600"
+                              onClick={() => handleDeleteCompany(company.id)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Supprimer
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -528,6 +698,235 @@ const Companies = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* COMPANY DETAILS DIALOG */}
+      <Dialog open={showCompanyDetails} onOpenChange={setShowCompanyDetails}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {isEditingCompany ? 'Modifier la compagnie' : 'Détails de la compagnie'}
+            </DialogTitle>
+          </DialogHeader>
+
+          {!isEditingCompany && selectedCompany ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="p-4 bg-blue-100 rounded-lg">
+                  <Building2 className="h-8 w-8 text-blue-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">{selectedCompany.name}</h2>
+                  <p className="text-gray-600">{selectedCompany.industry}</p>
+                  <Badge className={`mt-2 ${
+                    selectedCompany.status === 'active' ? 'bg-emerald-100 text-emerald-700' :
+                    selectedCompany.status === 'prospect' ? 'bg-amber-100 text-amber-700' :
+                    'bg-gray-100 text-gray-700'
+                  }`}>
+                    {selectedCompany.status === 'active' ? '🟢 Actif' : 
+                     selectedCompany.status === 'prospect' ? '🟡 Prospect' : 
+                     '🔴 Inactif'}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 border-t border-gray-200 pt-4">
+                <div>
+                  <p className="text-xs text-gray-600 uppercase font-bold">Chiffre d'affaires</p>
+                  <p className="text-gray-900 font-medium">{selectedCompany.revenue}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 uppercase font-bold">Employés</p>
+                  <p className="text-gray-900 font-medium">{selectedCompany.employees}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 uppercase font-bold">Contact principal</p>
+                  <p className="text-gray-900 font-medium">{selectedCompany.contactPerson}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 uppercase font-bold">Secteur</p>
+                  <p className="text-gray-900 font-medium">{selectedCompany.industry}</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 border-t border-gray-200 pt-4">
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-gray-400" />
+                  <span className="text-gray-900">{selectedCompany.email}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-gray-400" />
+                  <span className="text-gray-900">{selectedCompany.phone}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Globe className="h-4 w-4 text-gray-400" />
+                  <span className="text-gray-900">{selectedCompany.website}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-gray-400" />
+                  <span className="text-gray-900">{selectedCompany.address}</span>
+                </div>
+              </div>
+
+              <div className="flex gap-2 justify-end border-t border-gray-200 pt-4">
+                <Button variant="outline" onClick={() => setShowCompanyDetails(false)}>
+                  Fermer
+                </Button>
+                <Button onClick={() => {
+                  setEditForm({
+                    name: selectedCompany.name,
+                    industry: selectedCompany.industry,
+                    revenue: selectedCompany.revenue,
+                    employees: selectedCompany.employees,
+                    phone: selectedCompany.phone,
+                    email: selectedCompany.email,
+                    website: selectedCompany.website,
+                    address: selectedCompany.address,
+                    contactPerson: selectedCompany.contactPerson,
+                    status: selectedCompany.status
+                  });
+                  setIsEditingCompany(true);
+                }}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Modifier
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <Label>Nom de l'entreprise</Label>
+                <Input
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Secteur d'activité</Label>
+                  <Input
+                    value={editForm.industry}
+                    onChange={(e) => setEditForm({ ...editForm, industry: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Chiffre d'affaires</Label>
+                  <Input
+                    value={editForm.revenue}
+                    onChange={(e) => setEditForm({ ...editForm, revenue: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Nombre d'employés</Label>
+                  <Input
+                    value={editForm.employees}
+                    onChange={(e) => setEditForm({ ...editForm, employees: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Contact principal</Label>
+                  <Input
+                    value={editForm.contactPerson}
+                    onChange={(e) => setEditForm({ ...editForm, contactPerson: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Email</Label>
+                  <Input
+                    type="email"
+                    value={editForm.email}
+                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Téléphone</Label>
+                  <Input
+                    value={editForm.phone}
+                    onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label>Site web</Label>
+                <Input
+                  value={editForm.website}
+                  onChange={(e) => setEditForm({ ...editForm, website: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label>Adresse</Label>
+                <Input
+                  value={editForm.address}
+                  onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label>Statut</Label>
+                <select
+                  value={editForm.status}
+                  onChange={(e) => setEditForm({ ...editForm, status: e.target.value as 'active' | 'prospect' | 'inactive' })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md mt-1 bg-white"
+                >
+                  <option value="active">Actif</option>
+                  <option value="prospect">Prospect</option>
+                  <option value="inactive">Inactif</option>
+                </select>
+              </div>
+
+              <div className="flex gap-2 justify-end border-t border-gray-200 pt-4">
+                <Button variant="outline" onClick={() => {
+                  setIsEditingCompany(false);
+                  setShowCompanyDetails(false);
+                }}>
+                  Annuler
+                </Button>
+                <Button onClick={handleEditCompany}>
+                  Enregistrer
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* DELETE CONFIRMATION DIALOG */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer cette compagnie ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. La compagnie sera définitivement supprimée.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
