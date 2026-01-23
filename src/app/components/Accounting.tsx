@@ -23,7 +23,8 @@ import {
   Grid3x3,
   List,
   Kanban,
-  Search
+  Search,
+  Edit
 } from 'lucide-react';
 
 interface Transaction {
@@ -48,6 +49,7 @@ const Accounting = () => {
   const [showNewTransaction, setShowNewTransaction] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [isEditingTransaction, setIsEditingTransaction] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'kanban'>('list');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -83,6 +85,13 @@ const Accounting = () => {
     amount: '',
     category: '',
     date: new Date().toISOString().split('T')[0]
+  });
+
+  const [editForm, setEditForm] = useState({
+    description: '',
+    amount: '',
+    category: '',
+    date: ''
   });
 
   const getStatusColor = (status: string) => {
@@ -137,6 +146,29 @@ const Accounting = () => {
       setData(newData);
       setShowNewTransaction(false);
       setNewForm({ description: '', amount: '', category: '', date: new Date().toISOString().split('T')[0] });
+    }
+  };
+
+  const handleEditTransaction = () => {
+    if (selectedTransaction && editForm.description && editForm.amount && editForm.category) {
+      const newData = { ...data };
+      const tabData = newData[activeTab as keyof AccountingData];
+      const index = tabData.findIndex(t => t.id === selectedTransaction.id);
+      
+      if (index !== -1) {
+        tabData[index] = {
+          ...selectedTransaction,
+          date: editForm.date,
+          description: editForm.description,
+          amount: parseFloat(editForm.amount),
+          category: editForm.category
+        };
+        
+        setData(newData);
+        setIsEditingTransaction(false);
+        setShowDetails(false);
+        setSelectedTransaction(null);
+      }
     }
   };
 
@@ -518,53 +550,128 @@ const Accounting = () => {
 
       {/* Transaction Details Dialog */}
       {selectedTransaction && (
-        <Dialog open={showDetails} onOpenChange={setShowDetails}>
+        <Dialog open={showDetails} onOpenChange={(open) => {
+          setShowDetails(open);
+          if (!open) {
+            setIsEditingTransaction(false);
+          }
+        }}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Détails de la transaction</DialogTitle>
+              <DialogTitle>
+                {isEditingTransaction ? 'Modifier la transaction' : 'Détails de la transaction'}
+              </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            
+            {isEditingTransaction ? (
+              <div className="space-y-4">
                 <div>
-                  <p className="text-xs text-gray-600 uppercase font-semibold">Date</p>
-                  <p className="text-lg font-semibold text-gray-900 mt-1">{new Date(selectedTransaction.date).toLocaleDateString('fr-FR')}</p>
+                  <Label htmlFor="edit-date" className="text-sm font-medium">Date *</Label>
+                  <Input
+                    id="edit-date"
+                    type="date"
+                    value={editForm.date}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm({...editForm, date: e.target.value})}
+                    className="mt-1"
+                  />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600 uppercase font-semibold">Montant</p>
-                  <p className="text-lg font-semibold text-gray-900 mt-1">€{selectedTransaction.amount.toLocaleString()}</p>
+                  <Label htmlFor="edit-description" className="text-sm font-medium">Description *</Label>
+                  <Input
+                    id="edit-description"
+                    placeholder="Ex: Vente logiciel"
+                    value={editForm.description}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm({...editForm, description: e.target.value})}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-category" className="text-sm font-medium">Catégorie *</Label>
+                  <Input
+                    id="edit-category"
+                    placeholder="Ex: Software, Services"
+                    value={editForm.category}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm({...editForm, category: e.target.value})}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-amount" className="text-sm font-medium">Montant (€) *</Label>
+                  <Input
+                    id="edit-amount"
+                    type="number"
+                    placeholder="5000"
+                    value={editForm.amount}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm({...editForm, amount: e.target.value})}
+                    className="mt-1"
+                  />
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <Button variant="outline" onClick={() => setIsEditingTransaction(false)} className="flex-1">
+                    Annuler
+                  </Button>
+                  <Button onClick={handleEditTransaction} className="flex-1 bg-blue-600 hover:bg-blue-700">
+                    Enregistrer
+                  </Button>
                 </div>
               </div>
-              <div className="border-t pt-4">
-                <p className="text-xs text-gray-600 uppercase font-semibold">Description</p>
-                <p className="text-gray-900 mt-1">{selectedTransaction.description}</p>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase font-semibold">Date</p>
+                    <p className="text-lg font-semibold text-gray-900 mt-1">{new Date(selectedTransaction.date).toLocaleDateString('fr-FR')}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase font-semibold">Montant</p>
+                    <p className="text-lg font-semibold text-gray-900 mt-1">€{selectedTransaction.amount.toLocaleString()}</p>
+                  </div>
+                </div>
+                <div className="border-t pt-4">
+                  <p className="text-xs text-gray-600 uppercase font-semibold">Description</p>
+                  <p className="text-gray-900 mt-1">{selectedTransaction.description}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 uppercase font-semibold">Catégorie</p>
+                  <p className="text-gray-900 mt-1">
+                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                      {selectedTransaction.category}
+                    </span>
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 uppercase font-semibold">Référence</p>
+                  <p className="text-gray-900 mt-1">{selectedTransaction.reference}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 uppercase font-semibold">Statut</p>
+                  <Badge className={`${getStatusColor(selectedTransaction.status)} mt-1`}>
+                    {statusLabels[selectedTransaction.status as keyof typeof statusLabels]}
+                  </Badge>
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setEditForm({
+                        date: selectedTransaction.date,
+                        description: selectedTransaction.description,
+                        amount: selectedTransaction.amount.toString(),
+                        category: selectedTransaction.category
+                      });
+                      setIsEditingTransaction(true);
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Modifier
+                  </Button>
+                  <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
+                    Exporter
+                  </Button>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-gray-600 uppercase font-semibold">Catégorie</p>
-                <p className="text-gray-900 mt-1">
-                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                    {selectedTransaction.category}
-                  </span>
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-600 uppercase font-semibold">Référence</p>
-                <p className="text-gray-900 mt-1">{selectedTransaction.reference}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-600 uppercase font-semibold">Statut</p>
-                <Badge className={`${getStatusColor(selectedTransaction.status)} mt-1`}>
-                  {statusLabels[selectedTransaction.status as keyof typeof statusLabels]}
-                </Badge>
-              </div>
-              <div className="flex gap-3 pt-4">
-                <Button variant="outline" onClick={() => setShowDetails(false)} className="flex-1">
-                  Fermer
-                </Button>
-                <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
-                  Exporter
-                </Button>
-              </div>
-            </div>
+            )}
           </DialogContent>
         </Dialog>
       )}

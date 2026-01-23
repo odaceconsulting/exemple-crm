@@ -7,6 +7,12 @@ import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Button } from '@/app/components/ui/button';
 import { Badge } from '@/app/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/app/components/ui/dropdown-menu';
 import { 
   Plus, 
   DollarSign, 
@@ -14,7 +20,10 @@ import {
   Building2,
   User,
   MoreVertical,
-  TrendingUp
+  TrendingUp,
+  Eye,
+  Pencil,
+  Trash2
 } from 'lucide-react';
 
 interface Opportunity {
@@ -37,7 +46,13 @@ const STAGES = [
   { id: 'closed', name: 'Gagné', color: 'bg-green-500' }
 ];
 
-const OpportunityCard = ({ opportunity, onMove }: { opportunity: Opportunity; onMove: (id: number, stage: string) => void }) => {
+const OpportunityCard = ({ opportunity, onMove, onDelete, onShowDetails, onShowEdit }: { 
+  opportunity: Opportunity; 
+  onMove: (id: number, stage: string) => void;
+  onDelete: (id: number) => void;
+  onShowDetails: (opp: Opportunity) => void;
+  onShowEdit: (opp: Opportunity) => void;
+}) => {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'opportunity',
     item: { id: opportunity.id, stage: opportunity.stage },
@@ -81,9 +96,27 @@ const OpportunityCard = ({ opportunity, onMove }: { opportunity: Opportunity; on
     >
       <div className="flex justify-between items-start mb-3">
         <h3 className="font-semibold text-gray-900">{opportunity.title}</h3>
-        <button className="p-1 hover:bg-gray-100 rounded transition-colors">
-          <MoreVertical className="h-4 w-4 text-gray-500" />
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="p-1 hover:bg-gray-100 rounded transition-colors">
+              <MoreVertical className="h-4 w-4 text-gray-500" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onShowDetails(opportunity)}>
+              <Eye className="h-4 w-4 mr-2" />
+              Détails
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onShowEdit(opportunity)}>
+              <Pencil className="h-4 w-4 mr-2" />
+              Modifier
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onDelete(opportunity.id)} className="text-red-600">
+              <Trash2 className="h-4 w-4 mr-2" />
+              Supprimer
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       
       <div className="space-y-2">
@@ -134,11 +167,17 @@ const OpportunityCard = ({ opportunity, onMove }: { opportunity: Opportunity; on
 const PipelineColumn = ({ 
   stage, 
   opportunities, 
-  onDrop 
+  onDrop,
+  onDelete,
+  onShowDetails,
+  onShowEdit
 }: { 
   stage: typeof STAGES[0]; 
   opportunities: Opportunity[]; 
   onDrop: (id: number, stage: string) => void;
+  onDelete: (id: number) => void;
+  onShowDetails: (opp: Opportunity) => void;
+  onShowEdit: (opp: Opportunity) => void;
 }) => {
   const [{ isOver }, drop] = useDrop(() => ({
     accept: 'opportunity',
@@ -181,6 +220,9 @@ const PipelineColumn = ({
             key={opportunity.id}
             opportunity={opportunity}
             onMove={onDrop}
+            onDelete={onDelete}
+            onShowDetails={onShowDetails}
+            onShowEdit={onShowEdit}
           />
         ))}
         
@@ -287,6 +329,10 @@ const PipelineContent = () => {
   ]);
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editFormData, setEditFormData] = useState<Opportunity | null>(null);
 
   const handleDrop = (id: number, newStage: string) => {
     setOpportunities(prev =>
@@ -296,8 +342,49 @@ const PipelineContent = () => {
     );
   };
 
+  const handleDeleteOpportunity = (id: number) => {
+    setOpportunities(prev => prev.filter(opp => opp.id !== id));
+  };
+
+  const handleShowDetails = (opp: Opportunity) => {
+    setSelectedOpportunity(opp);
+    setIsDetailsDialogOpen(true);
+  };
+
+  const handleShowEdit = (opp: Opportunity) => {
+    setEditFormData({ ...opp });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (editFormData) {
+      setOpportunities(prev =>
+        prev.map(opp => opp.id === editFormData.id ? editFormData : opp)
+      );
+      setIsEditDialogOpen(false);
+      setEditFormData(null);
+    }
+  };
+
   const getOpportunitiesByStage = (stageId: string) => {
     return opportunities.filter(opp => opp.stage === stageId);
+  };
+
+  const getStageLabel = (stageId: string) => {
+    return STAGES.find(s => s.id === stageId)?.name || stageId;
+  };
+
+  const getPriorityLabel = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'Haute';
+      case 'medium':
+        return 'Moyenne';
+      case 'low':
+        return 'Basse';
+      default:
+        return priority;
+    }
   };
 
   const totalPipelineValue = opportunities
@@ -387,6 +474,156 @@ const PipelineContent = () => {
         </Dialog>
       </div>
 
+      {/* Details Dialog */}
+      <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Détails de l'Opportunité</DialogTitle>
+          </DialogHeader>
+          {selectedOpportunity && (
+            <div className="grid grid-cols-2 gap-6 py-4">
+              <div>
+                <label className="text-sm font-medium text-gray-600">Titre</label>
+                <p className="text-gray-900 font-semibold mt-1">{selectedOpportunity.title}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600">Entreprise</label>
+                <p className="text-gray-900 font-semibold mt-1">{selectedOpportunity.company}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600">Contact</label>
+                <p className="text-gray-900 font-semibold mt-1">{selectedOpportunity.contact}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600">Montant</label>
+                <p className="text-gray-900 font-semibold mt-1">€{selectedOpportunity.value.toLocaleString()}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600">Probabilité</label>
+                <p className="text-gray-900 font-semibold mt-1">{selectedOpportunity.probability}%</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600">Étape</label>
+                <p className="text-gray-900 font-semibold mt-1">{getStageLabel(selectedOpportunity.stage)}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600">Priorité</label>
+                <p className="text-gray-900 font-semibold mt-1">{getPriorityLabel(selectedOpportunity.priority)}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600">Date de clôture</label>
+                <p className="text-gray-900 font-semibold mt-1">{new Date(selectedOpportunity.closeDate).toLocaleDateString('fr-FR')}</p>
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end gap-3">
+            <Button onClick={() => setIsDetailsDialogOpen(false)}>
+              Fermer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Modifier l'Opportunité</DialogTitle>
+          </DialogHeader>
+          {editFormData && (
+            <div className="grid grid-cols-2 gap-4 py-4">
+              <div className="space-y-2 col-span-2">
+                <Label htmlFor="edit-title">Titre de l'opportunité *</Label>
+                <Input 
+                  id="edit-title" 
+                  value={editFormData.title}
+                  onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-company">Entreprise *</Label>
+                <Input 
+                  id="edit-company" 
+                  value={editFormData.company}
+                  onChange={(e) => setEditFormData({ ...editFormData, company: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-contact">Contact</Label>
+                <Input 
+                  id="edit-contact" 
+                  value={editFormData.contact}
+                  onChange={(e) => setEditFormData({ ...editFormData, contact: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-value">Montant (€) *</Label>
+                <Input 
+                  id="edit-value" 
+                  type="number" 
+                  value={editFormData.value}
+                  onChange={(e) => setEditFormData({ ...editFormData, value: parseInt(e.target.value) })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-probability">Probabilité (%)</Label>
+                <Input 
+                  id="edit-probability" 
+                  type="number" 
+                  min="0" 
+                  max="100" 
+                  value={editFormData.probability}
+                  onChange={(e) => setEditFormData({ ...editFormData, probability: parseInt(e.target.value) })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-stage">Étape</Label>
+                <select 
+                  id="edit-stage" 
+                  value={editFormData.stage}
+                  onChange={(e) => setEditFormData({ ...editFormData, stage: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="prospection">Prospection</option>
+                  <option value="qualification">Qualification</option>
+                  <option value="proposition">Proposition</option>
+                  <option value="negotiation">Négociation</option>
+                  <option value="closed">Gagné</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-closedate">Date de clôture prévue</Label>
+                <Input 
+                  id="edit-closedate" 
+                  type="date" 
+                  value={editFormData.closeDate}
+                  onChange={(e) => setEditFormData({ ...editFormData, closeDate: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-priority">Priorité</Label>
+                <select 
+                  id="edit-priority" 
+                  value={editFormData.priority}
+                  onChange={(e) => setEditFormData({ ...editFormData, priority: e.target.value as 'low' | 'medium' | 'high' })}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="low">Basse</option>
+                  <option value="medium">Moyenne</option>
+                  <option value="high">Haute</option>
+                </select>
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleSaveEdit}>
+              Enregistrer les modifications
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="border-0 shadow-sm">
@@ -456,6 +693,9 @@ const PipelineContent = () => {
               stage={stage}
               opportunities={getOpportunitiesByStage(stage.id)}
               onDrop={handleDrop}
+              onDelete={handleDeleteOpportunity}
+              onShowDetails={handleShowDetails}
+              onShowEdit={handleShowEdit}
             />
           ))}
         </div>

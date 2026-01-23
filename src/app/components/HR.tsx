@@ -6,6 +6,7 @@ import { Label } from '@/app/components/ui/label';
 import { Button } from '@/app/components/ui/button';
 import { Badge } from '@/app/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/app/components/ui/avatar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { 
   UserSquare2, 
   Plus, 
@@ -23,7 +24,8 @@ import {
   AlertCircle,
   Grid3x3,
   List,
-  Kanban
+  Kanban,
+  Edit2
 } from 'lucide-react';
 
 interface Employee {
@@ -46,8 +48,9 @@ const HR = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [showEmployeeCard, setShowEmployeeCard] = useState(false);
-
-  const employees: Employee[] = [
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editFormData, setEditFormData] = useState<Employee | null>(null);
+  const [employees, setEmployees] = useState<Employee[]>([
     {
       id: 1,
       firstName: 'Marie',
@@ -152,7 +155,29 @@ const HR = () => {
       skills: ['React', 'TypeScript', 'CSS'],
       availability: 100
     }
-  ];
+  ]);
+
+  const handleEditEmployee = () => {
+    if (selectedEmployee) {
+      setEditFormData({ ...selectedEmployee });
+      setEditDialogOpen(true);
+    }
+  };
+
+  const handleSaveEdit = () => {
+    if (editFormData) {
+      if (!editFormData.firstName || !editFormData.lastName || !editFormData.email || !editFormData.phone) {
+        alert('Veuillez remplir tous les champs requis!');
+        return;
+      }
+      setEmployees(employees.map(e => e.id === editFormData.id ? editFormData : e));
+      setSelectedEmployee(editFormData);
+      console.log('Employee updated:', editFormData);
+      alert('Collaborateur modifié avec succès!');
+      setEditDialogOpen(false);
+      setEditFormData(null);
+    }
+  };
 
   const departments = [
     { name: 'Commercial', count: employees.filter(e => e.department === 'Commercial').length, color: 'bg-blue-500' },
@@ -819,9 +844,168 @@ const HR = () => {
                   </div>
                 </div>
               </div>
-              <Button onClick={() => setShowEmployeeCard(false)} className="w-full mt-4 bg-blue-600 hover:bg-blue-700">
-                Fermer
-              </Button>
+              <div className="flex gap-2 mt-4">
+                <Button onClick={() => setShowEmployeeCard(false)} variant="outline" className="flex-1">
+                  Fermer
+                </Button>
+                <Button onClick={handleEditEmployee} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2">
+                  <Edit2 className="h-4 w-4" />
+                  Modifier
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {/* Edit Employee Dialog */}
+        {editFormData && (
+          <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle className="text-lg md:text-xl">Modifier le collaborateur</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto py-2">
+                {/* Personal Information */}
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-3">Informations personnelles</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label htmlFor="edit-firstName" className="text-sm mb-1 block">Prénom</Label>
+                      <Input
+                        id="edit-firstName"
+                        value={editFormData.firstName}
+                        onChange={(e) => setEditFormData({ ...editFormData, firstName: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-lastName" className="text-sm mb-1 block">Nom</Label>
+                      <Input
+                        id="edit-lastName"
+                        value={editFormData.lastName}
+                        onChange={(e) => setEditFormData({ ...editFormData, lastName: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact Information */}
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-3">Informations de contact</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="edit-email" className="text-sm mb-1 block">Email</Label>
+                      <Input
+                        id="edit-email"
+                        type="email"
+                        value={editFormData.email}
+                        onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-phone" className="text-sm mb-1 block">Téléphone</Label>
+                      <Input
+                        id="edit-phone"
+                        value={editFormData.phone}
+                        onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Employment Information */}
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-3">Informations d'emploi</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label htmlFor="edit-position" className="text-sm mb-1 block">Poste</Label>
+                      <Input
+                        id="edit-position"
+                        value={editFormData.position}
+                        onChange={(e) => setEditFormData({ ...editFormData, position: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-department" className="text-sm mb-1 block">Département</Label>
+                      <Select value={editFormData.department} onValueChange={(value) => setEditFormData({ ...editFormData, department: value })}>
+                        <SelectTrigger id="edit-department">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Commercial">Commercial</SelectItem>
+                          <SelectItem value="IT">IT</SelectItem>
+                          <SelectItem value="Management">Management</SelectItem>
+                          <SelectItem value="Design">Design</SelectItem>
+                          <SelectItem value="Marketing">Marketing</SelectItem>
+                          <SelectItem value="Finance">Finance</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 mt-3">
+                    <div>
+                      <Label htmlFor="edit-hireDate" className="text-sm mb-1 block">Date d'embauche</Label>
+                      <Input
+                        id="edit-hireDate"
+                        type="date"
+                        value={editFormData.hireDate}
+                        onChange={(e) => setEditFormData({ ...editFormData, hireDate: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-status" className="text-sm mb-1 block">Statut</Label>
+                      <Select value={editFormData.status} onValueChange={(value) => setEditFormData({ ...editFormData, status: value as any })}>
+                        <SelectTrigger id="edit-status">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">Actif</SelectItem>
+                          <SelectItem value="on-leave">En congé</SelectItem>
+                          <SelectItem value="inactive">Inactif</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Availability */}
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-3">Disponibilité</h3>
+                  <div>
+                    <Label htmlFor="edit-availability" className="text-sm mb-1 block">Taux de disponibilité (%)</Label>
+                    <Input
+                      id="edit-availability"
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={editFormData.availability}
+                      onChange={(e) => setEditFormData({ ...editFormData, availability: parseInt(e.target.value) || 0 })}
+                    />
+                  </div>
+                </div>
+
+                {/* Skills */}
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-3">Compétences</h3>
+                  <div>
+                    <Label htmlFor="edit-skills" className="text-sm mb-1 block">Compétences (séparées par des virgules)</Label>
+                    <Input
+                      id="edit-skills"
+                      value={editFormData.skills.join(', ')}
+                      onChange={(e) => setEditFormData({ ...editFormData, skills: e.target.value.split(',').map(s => s.trim()).filter(s => s) })}
+                      placeholder="Ex: React, Node.js, MongoDB"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2 mt-4">
+                <Button variant="outline" onClick={() => setEditDialogOpen(false)} className="flex-1">
+                  Annuler
+                </Button>
+                <Button onClick={handleSaveEdit} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+                  Enregistrer
+                </Button>
+              </div>
             </DialogContent>
           </Dialog>
         )}

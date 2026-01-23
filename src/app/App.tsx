@@ -34,6 +34,10 @@ import Accounting from '@/app/components/Accounting';
 import Quotes from '@/app/components/Quotes';
 import Settings from '@/app/components/Settings';
 import { Input } from '@/app/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
+import { Button } from '@/app/components/ui/button';
+import { Card, CardContent } from '@/app/components/ui/card';
+import { Label } from '@/app/components/ui/label';
 
 type PageType = 'dashboard' | 'companies' | 'contacts' | 'pipeline' | 'documents' | 'invoicing' | 'projects' | 'hr' | 'marketing' | 'payments' | 'accounting' | 'quotes' | 'settings';
 
@@ -42,6 +46,23 @@ export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileData, setProfileData] = useState({
+    firstName: 'Marie',
+    lastName: 'Dupont',
+    email: 'marie@crmpro.com',
+    phone: '+33 1 23 45 67 89',
+    company: 'CRM Pro',
+    position: 'Directrice Générale'
+  });
+  const [editProfileData, setEditProfileData] = useState(profileData);
+  const [notifications] = useState([
+    { id: 1, title: 'Nouvelle opportunité', message: 'Acme Corporation a créé une nouvelle opportunité de 50 000€', time: 'Il y a 2h', read: false },
+    { id: 2, title: 'Facture en attente', message: 'Facture #INV-2026-001 en attente de paiement', time: 'Il y a 4h', read: false },
+    { id: 3, title: 'Événement RH', message: 'Réunion d\'équipe programmée pour demain à 14h', time: 'Il y a 1j', read: true },
+    { id: 4, title: 'Document approuvé', message: 'Le contrat avec TechStart a été approuvé', time: 'Il y a 2j', read: true }
+  ]);
 
   const navigation = [
     { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
@@ -140,6 +161,16 @@ export default function App() {
   const handleNavigation = (pageId: string) => {
     setCurrentPage(pageId as PageType);
     setMobileMenuOpen(false);
+  };
+
+  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditProfileData({ ...editProfileData, [name]: value });
+  };
+
+  const handleProfileSave = () => {
+    setProfileData(editProfileData);
+    setProfileOpen(false);
   };
 
   // On mobile, show names when menu is open; on desktop, follow collapsed state
@@ -245,13 +276,150 @@ export default function App() {
 
           {/* User Menu */}
           <div className="flex items-center gap-3 md:gap-6">
-            <button className="p-1.5 md:p-2 relative hover:bg-gray-100 rounded-lg transition-colors">
-              <Bell className="h-4 md:h-5 w-4 md:w-5 text-gray-600" />
-              <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full" />
-            </button>
-            <button className="p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors hidden sm:block">
-              <User className="h-4 md:h-5 w-4 md:w-5 text-gray-600" />
-            </button>
+            <Dialog open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+              <DialogTrigger asChild>
+                <button className="p-1.5 md:p-2 relative hover:bg-gray-100 rounded-lg transition-colors">
+                  <Bell className="h-4 md:h-5 w-4 md:w-5 text-gray-600" />
+                  <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full" />
+                </button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Notifications</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {notifications.map((notif) => (
+                    <div key={notif.id} className={`p-3 rounded-lg border ${notif.read ? 'border-gray-200 bg-gray-50' : 'border-blue-200 bg-blue-50'}`}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm text-gray-900">{notif.title}</p>
+                          <p className="text-xs text-gray-600 mt-1 line-clamp-2">{notif.message}</p>
+                          <p className="text-xs text-gray-500 mt-2">{notif.time}</p>
+                        </div>
+                        {!notif.read && <div className="h-2 w-2 bg-blue-600 rounded-full mt-1 flex-shrink-0" />}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
+              <DialogTrigger asChild>
+                <button className="p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors hidden sm:block">
+                  <User className="h-4 md:h-5 w-4 md:w-5 text-gray-600" />
+                </button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Mon Profil</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <Card className="bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                          {editProfileData.firstName[0]}{editProfileData.lastName[0]}
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-900">{editProfileData.firstName} {editProfileData.lastName}</p>
+                          <p className="text-sm text-gray-600">{editProfileData.position}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="firstName" className="text-xs text-gray-600 mb-1 block">Prénom</Label>
+                        <Input
+                          id="firstName"
+                          name="firstName"
+                          value={editProfileData.firstName}
+                          onChange={handleProfileChange}
+                          className="text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="lastName" className="text-xs text-gray-600 mb-1 block">Nom</Label>
+                        <Input
+                          id="lastName"
+                          name="lastName"
+                          value={editProfileData.lastName}
+                          onChange={handleProfileChange}
+                          className="text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="email" className="text-xs text-gray-600 mb-1 block">Email</Label>
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={editProfileData.email}
+                        onChange={handleProfileChange}
+                        className="text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="phone" className="text-xs text-gray-600 mb-1 block">Téléphone</Label>
+                      <Input
+                        id="phone"
+                        name="phone"
+                        value={editProfileData.phone}
+                        onChange={handleProfileChange}
+                        className="text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="company" className="text-xs text-gray-600 mb-1 block">Entreprise</Label>
+                      <Input
+                        id="company"
+                        name="company"
+                        value={editProfileData.company}
+                        onChange={handleProfileChange}
+                        className="text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="position" className="text-xs text-gray-600 mb-1 block">Poste</Label>
+                      <Input
+                        id="position"
+                        name="position"
+                        value={editProfileData.position}
+                        onChange={handleProfileChange}
+                        className="text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-3">
+                    <Button
+                      onClick={handleProfileSave}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      Enregistrer
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setEditProfileData(profileData);
+                        setProfileOpen(false);
+                      }}
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      Annuler
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 

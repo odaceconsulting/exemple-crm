@@ -20,7 +20,8 @@ import {
   Grid3x3,
   List,
   Kanban,
-  Search
+  Search,
+  Edit
 } from 'lucide-react';
 
 interface Payment {
@@ -84,10 +85,19 @@ const Payments = () => {
   const [showNewPayment, setShowNewPayment] = useState(false);
   const [showPaymentDetails, setShowPaymentDetails] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [isEditingPayment, setIsEditingPayment] = useState(false);
   const [filterStatus, setFilterStatus] = useState<'all' | 'paid' | 'pending' | 'failed'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'kanban'>('list');
   const [searchQuery, setSearchQuery] = useState('');
   const [newPaymentForm, setNewPaymentForm] = useState({
+    invoiceNumber: '',
+    company: '',
+    amount: '',
+    method: 'transfer' as const,
+    dueDate: ''
+  });
+
+  const [editPaymentForm, setEditPaymentForm] = useState({
     invoiceNumber: '',
     company: '',
     amount: '',
@@ -181,6 +191,24 @@ const Payments = () => {
       p.id === id ? { ...p, status: 'paid', paidDate: new Date().toISOString().split('T')[0] } : p
     ));
     setSelectedPayment(null);
+  };
+
+  const handleEditPayment = () => {
+    if (selectedPayment && editPaymentForm.invoiceNumber && editPaymentForm.company && editPaymentForm.amount) {
+      setPayments(payments.map(p =>
+        p.id === selectedPayment.id ? {
+          ...p,
+          invoiceNumber: editPaymentForm.invoiceNumber,
+          company: editPaymentForm.company,
+          amount: parseFloat(editPaymentForm.amount),
+          method: editPaymentForm.method,
+          dueDate: editPaymentForm.dueDate
+        } : p
+      ));
+      setIsEditingPayment(false);
+      setShowPaymentDetails(false);
+      setSelectedPayment(null);
+    }
   };
 
   return (
@@ -548,65 +576,156 @@ const Payments = () => {
 
       {/* Payment Details Dialog */}
       {selectedPayment && (
-        <Dialog open={showPaymentDetails} onOpenChange={setShowPaymentDetails}>
+        <Dialog open={showPaymentDetails} onOpenChange={(open) => {
+          setShowPaymentDetails(open);
+          if (!open) {
+            setIsEditingPayment(false);
+          }
+        }}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Détails du paiement</DialogTitle>
+              <DialogTitle>
+                {isEditingPayment ? 'Modifier le paiement' : 'Détails du paiement'}
+              </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            
+            {isEditingPayment ? (
+              <div className="space-y-4">
                 <div>
-                  <p className="text-xs text-gray-600 uppercase font-semibold">Facture</p>
-                  <p className="text-lg font-semibold text-gray-900 mt-1">{selectedPayment.invoiceNumber}</p>
+                  <Label htmlFor="edit-invoice" className="text-sm font-medium">Numéro de facture *</Label>
+                  <Input
+                    id="edit-invoice"
+                    placeholder="INV-2026-001"
+                    value={editPaymentForm.invoiceNumber}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditPaymentForm({...editPaymentForm, invoiceNumber: e.target.value})}
+                    className="mt-1"
+                  />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600 uppercase font-semibold">Montant</p>
-                  <p className="text-lg font-semibold text-gray-900 mt-1">€{selectedPayment.amount.toLocaleString()}</p>
+                  <Label htmlFor="edit-company" className="text-sm font-medium">Entreprise *</Label>
+                  <Input
+                    id="edit-company"
+                    placeholder="Acme Corp"
+                    value={editPaymentForm.company}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditPaymentForm({...editPaymentForm, company: e.target.value})}
+                    className="mt-1"
+                  />
                 </div>
-              </div>
-              <div className="border-t pt-4">
-                <p className="text-xs text-gray-600 uppercase font-semibold">Entreprise</p>
-                <p className="text-gray-900 mt-1">{selectedPayment.company}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-600 uppercase font-semibold">Méthode</p>
-                <p className={`px-3 py-1 rounded-full text-xs font-medium border inline-block mt-1 ${getMethodColor(selectedPayment.method)}`}>
-                  {methodLabels[selectedPayment.method as keyof typeof methodLabels]}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-600 uppercase font-semibold">Statut</p>
-                <Badge className={`${getStatusColor(selectedPayment.status)} mt-1`}>
-                  {statusLabels[selectedPayment.status as keyof typeof statusLabels]}
-                </Badge>
-              </div>
-              <div className="grid grid-cols-2 gap-4 border-t pt-4">
                 <div>
-                  <p className="text-xs text-gray-600 uppercase font-semibold">Échéance</p>
-                  <p className="text-gray-900 mt-1">{new Date(selectedPayment.dueDate).toLocaleDateString('fr-FR')}</p>
+                  <Label htmlFor="edit-amount" className="text-sm font-medium">Montant (€) *</Label>
+                  <Input
+                    id="edit-amount"
+                    type="number"
+                    placeholder="15000"
+                    value={editPaymentForm.amount}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditPaymentForm({...editPaymentForm, amount: e.target.value})}
+                    className="mt-1"
+                  />
                 </div>
-                {selectedPayment.paidDate && (
+                <div>
+                  <Label htmlFor="edit-method" className="text-sm font-medium">Méthode</Label>
+                  <select
+                    id="edit-method"
+                    value={editPaymentForm.method}
+                    onChange={(e) => setEditPaymentForm({...editPaymentForm, method: e.target.value as any})}
+                    className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="card">Carte Bancaire</option>
+                    <option value="bank">Virement Bancaire</option>
+                    <option value="check">Chèque</option>
+                    <option value="cash">Espèces</option>
+                    <option value="transfer">Transfert</option>
+                  </select>
+                </div>
+                <div>
+                  <Label htmlFor="edit-dueDate" className="text-sm font-medium">Date d'échéance *</Label>
+                  <Input
+                    id="edit-dueDate"
+                    type="date"
+                    value={editPaymentForm.dueDate}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditPaymentForm({...editPaymentForm, dueDate: e.target.value})}
+                    className="mt-1"
+                  />
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <Button variant="outline" onClick={() => setIsEditingPayment(false)} className="flex-1">
+                    Annuler
+                  </Button>
+                  <Button onClick={handleEditPayment} className="flex-1 bg-blue-600 hover:bg-blue-700">
+                    Enregistrer
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-xs text-gray-600 uppercase font-semibold">Date de paiement</p>
-                    <p className="text-gray-900 mt-1">{new Date(selectedPayment.paidDate).toLocaleDateString('fr-FR')}</p>
+                    <p className="text-xs text-gray-600 uppercase font-semibold">Facture</p>
+                    <p className="text-lg font-semibold text-gray-900 mt-1">{selectedPayment.invoiceNumber}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase font-semibold">Montant</p>
+                    <p className="text-lg font-semibold text-gray-900 mt-1">€{selectedPayment.amount.toLocaleString()}</p>
+                  </div>
+                </div>
+                <div className="border-t pt-4">
+                  <p className="text-xs text-gray-600 uppercase font-semibold">Entreprise</p>
+                  <p className="text-gray-900 mt-1">{selectedPayment.company}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 uppercase font-semibold">Méthode</p>
+                  <p className={`px-3 py-1 rounded-full text-xs font-medium border inline-block mt-1 ${getMethodColor(selectedPayment.method)}`}>
+                    {methodLabels[selectedPayment.method as keyof typeof methodLabels]}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 uppercase font-semibold">Statut</p>
+                  <Badge className={`${getStatusColor(selectedPayment.status)} mt-1`}>
+                    {statusLabels[selectedPayment.status as keyof typeof statusLabels]}
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-2 gap-4 border-t pt-4">
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase font-semibold">Échéance</p>
+                    <p className="text-gray-900 mt-1">{new Date(selectedPayment.dueDate).toLocaleDateString('fr-FR')}</p>
+                  </div>
+                  {selectedPayment.paidDate && (
+                    <div>
+                      <p className="text-xs text-gray-600 uppercase font-semibold">Date de paiement</p>
+                      <p className="text-gray-900 mt-1">{new Date(selectedPayment.paidDate).toLocaleDateString('fr-FR')}</p>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 uppercase font-semibold">Référence</p>
+                  <p className="text-gray-900 mt-1">{selectedPayment.reference}</p>
+                </div>
+                {selectedPayment.status === 'pending' && (
+                  <div className="flex gap-3 pt-4">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setEditPaymentForm({
+                          invoiceNumber: selectedPayment.invoiceNumber,
+                          company: selectedPayment.company,
+                          amount: selectedPayment.amount.toString(),
+                          method: selectedPayment.method,
+                          dueDate: selectedPayment.dueDate
+                        });
+                        setIsEditingPayment(true);
+                      }}
+                      className="flex-1 flex items-center justify-center gap-2"
+                    >
+                      <Edit className="h-4 w-4" />
+                      Modifier
+                    </Button>
+                    <Button onClick={() => handleMarkAsPaid(selectedPayment.id)} className="flex-1 bg-green-600 hover:bg-green-700">
+                      Marquer comme payé
+                    </Button>
                   </div>
                 )}
               </div>
-              <div>
-                <p className="text-xs text-gray-600 uppercase font-semibold">Référence</p>
-                <p className="text-gray-900 mt-1">{selectedPayment.reference}</p>
-              </div>
-              {selectedPayment.status === 'pending' && (
-                <div className="flex gap-3 pt-4">
-                  <Button variant="outline" onClick={() => setShowPaymentDetails(false)} className="flex-1">
-                    Fermer
-                  </Button>
-                  <Button onClick={() => handleMarkAsPaid(selectedPayment.id)} className="flex-1 bg-green-600 hover:bg-green-700">
-                    Marquer comme payé
-                  </Button>
-                </div>
-              )}
-            </div>
+            )}
           </DialogContent>
         </Dialog>
       )}

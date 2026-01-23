@@ -5,6 +5,7 @@ import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Button } from '@/app/components/ui/button';
 import { Badge } from '@/app/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { 
   Mail, 
   Plus, 
@@ -21,7 +22,8 @@ import {
   Target,
   Grid3x3,
   List,
-  Kanban
+  Kanban,
+  Edit2
 } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
@@ -47,8 +49,9 @@ const Marketing = () => {
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [showCampaignDialog, setShowCampaignDialog] = useState(false);
   const [showSendDialog, setShowSendDialog] = useState(false);
-
-  const campaigns: Campaign[] = [
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editFormData, setEditFormData] = useState<Campaign | null>(null);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([
     {
       id: 1,
       name: 'Lancement Nouveau Produit',
@@ -131,7 +134,29 @@ const Marketing = () => {
       conversions: 0,
       roi: 0
     }
-  ];
+  ]);
+
+  const handleEditCampaign = () => {
+    if (selectedCampaign) {
+      setEditFormData({ ...selectedCampaign });
+      setEditDialogOpen(true);
+    }
+  };
+
+  const handleSaveEdit = () => {
+    if (editFormData) {
+      if (!editFormData.name || !editFormData.budget || !editFormData.startDate) {
+        alert('Veuillez remplir tous les champs requis!');
+        return;
+      }
+      setCampaigns(campaigns.map(c => c.id === editFormData.id ? editFormData : c));
+      setSelectedCampaign(editFormData);
+      console.log('Campaign updated:', editFormData);
+      alert('Campagne modifiée avec succès!');
+      setEditDialogOpen(false);
+      setEditFormData(null);
+    }
+  };
 
   const performanceData = [
     { month: 'Jan', reach: 45000, conversions: 145 },
@@ -881,6 +906,10 @@ const Marketing = () => {
               </div>
               <div className="flex gap-2 mt-4">
                 <Button variant="outline" onClick={() => setShowCampaignDialog(false)}>Fermer</Button>
+                <Button onClick={handleEditCampaign} className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2">
+                  <Edit2 className="h-4 w-4" />
+                  Modifier
+                </Button>
                 <Button onClick={() => { setShowCampaignDialog(false); setShowSendDialog(true); }}>Envoyer</Button>
               </div>
             </DialogContent>
@@ -900,6 +929,145 @@ const Marketing = () => {
               <div className="flex justify-end gap-3 mt-4">
                 <Button variant="outline" onClick={() => setShowSendDialog(false)}>Annuler</Button>
                 <Button onClick={() => { setShowSendDialog(false); alert(`Campagne '${selectedCampaign.name}' envoyée (simulation)`); }}>Envoyer maintenant</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {/* Edit Campaign Dialog */}
+        {editFormData && (
+          <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+            <DialogContent className="max-w-lg md:max-w-2xl">
+              <DialogHeader>
+                <DialogTitle className="text-lg md:text-xl">Modifier la campagne</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto py-2">
+                <div>
+                  <Label htmlFor="edit-campaign-name" className="text-sm mb-1 block">Nom de la campagne</Label>
+                  <Input
+                    id="edit-campaign-name"
+                    value={editFormData.name}
+                    onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-campaign-type" className="text-sm mb-1 block">Type</Label>
+                    <Select value={editFormData.type} onValueChange={(value) => setEditFormData({ ...editFormData, type: value as any })}>
+                      <SelectTrigger id="edit-campaign-type">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="email">Email</SelectItem>
+                        <SelectItem value="social">Social</SelectItem>
+                        <SelectItem value="sms">SMS</SelectItem>
+                        <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-campaign-status" className="text-sm mb-1 block">Statut</Label>
+                    <Select value={editFormData.status} onValueChange={(value) => setEditFormData({ ...editFormData, status: value as any })}>
+                      <SelectTrigger id="edit-campaign-status">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="draft">Brouillon</SelectItem>
+                        <SelectItem value="scheduled">Planifiée</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="completed">Terminée</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-campaign-budget" className="text-sm mb-1 block">Budget (€)</Label>
+                    <Input
+                      id="edit-campaign-budget"
+                      type="number"
+                      value={editFormData.budget}
+                      onChange={(e) => setEditFormData({ ...editFormData, budget: parseFloat(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-campaign-spent" className="text-sm mb-1 block">Dépensé (€)</Label>
+                    <Input
+                      id="edit-campaign-spent"
+                      type="number"
+                      value={editFormData.spent}
+                      onChange={(e) => setEditFormData({ ...editFormData, spent: parseFloat(e.target.value) || 0 })}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-campaign-startDate" className="text-sm mb-1 block">Date de début</Label>
+                    <Input
+                      id="edit-campaign-startDate"
+                      type="date"
+                      value={editFormData.startDate}
+                      onChange={(e) => setEditFormData({ ...editFormData, startDate: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-campaign-endDate" className="text-sm mb-1 block">Date de fin</Label>
+                    <Input
+                      id="edit-campaign-endDate"
+                      type="date"
+                      value={editFormData.endDate || ''}
+                      onChange={(e) => setEditFormData({ ...editFormData, endDate: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="edit-campaign-reach" className="text-sm mb-1 block">Portée</Label>
+                    <Input
+                      id="edit-campaign-reach"
+                      type="number"
+                      value={editFormData.reach}
+                      onChange={(e) => setEditFormData({ ...editFormData, reach: parseInt(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-campaign-engagement" className="text-sm mb-1 block">Engagement</Label>
+                    <Input
+                      id="edit-campaign-engagement"
+                      type="number"
+                      value={editFormData.engagement}
+                      onChange={(e) => setEditFormData({ ...editFormData, engagement: parseInt(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-campaign-conversions" className="text-sm mb-1 block">Conversions</Label>
+                    <Input
+                      id="edit-campaign-conversions"
+                      type="number"
+                      value={editFormData.conversions}
+                      onChange={(e) => setEditFormData({ ...editFormData, conversions: parseInt(e.target.value) || 0 })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-campaign-roi" className="text-sm mb-1 block">ROI (%)</Label>
+                  <Input
+                    id="edit-campaign-roi"
+                    type="number"
+                    value={editFormData.roi}
+                    onChange={(e) => setEditFormData({ ...editFormData, roi: parseInt(e.target.value) || 0 })}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2 mt-4">
+                <Button variant="outline" onClick={() => setEditDialogOpen(false)} className="flex-1">Annuler</Button>
+                <Button onClick={handleSaveEdit} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">Enregistrer</Button>
               </div>
             </DialogContent>
           </Dialog>

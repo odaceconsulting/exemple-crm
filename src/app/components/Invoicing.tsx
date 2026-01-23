@@ -21,7 +21,8 @@ import {
   Grid3x3,
   List,
   Kanban,
-  MoreVertical
+  MoreVertical,
+  Edit
 } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
@@ -40,6 +41,9 @@ const Invoicing = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'kanban'>('list')
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [showInvoiceDetails, setShowInvoiceDetails] = useState(false);
+  const [isEditingInvoice, setIsEditingInvoice] = useState(false);
 
   const invoices: Invoice[] = [
     {
@@ -521,7 +525,13 @@ const Invoicing = () => {
                   </div>
                 </div>
                 <div className="flex gap-2 pt-4 border-t">
-                  <button className="flex-1 flex items-center justify-center gap-1 p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-sm">
+                  <button 
+                    onClick={() => {
+                      setSelectedInvoice(invoice);
+                      setShowInvoiceDetails(true);
+                    }}
+                    className="flex-1 flex items-center justify-center gap-1 p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-sm"
+                  >
                     <Eye className="h-4 w-4" />
                     Voir
                   </button>
@@ -612,7 +622,14 @@ const Invoicing = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Voir">
+                          <button 
+                            onClick={() => {
+                              setSelectedInvoice(invoice);
+                              setShowInvoiceDetails(true);
+                            }}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" 
+                            title="Voir"
+                          >
                             <Eye className="h-4 w-4" />
                           </button>
                           <button className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Envoyer">
@@ -676,6 +693,136 @@ const Invoicing = () => {
             );
           })}
         </div>
+      )}
+
+      {/* Invoice Details Dialog */}
+      {selectedInvoice && (
+        <Dialog open={showInvoiceDetails} onOpenChange={(open) => {
+          setShowInvoiceDetails(open);
+          if (!open) {
+            setIsEditingInvoice(false);
+          }
+        }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>
+                {isEditingInvoice ? 'Modifier la facture' : 'Détails de la facture'}
+              </DialogTitle>
+            </DialogHeader>
+            
+            {!isEditingInvoice ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase font-semibold">Facture</p>
+                    <p className="text-lg font-semibold text-gray-900 mt-1">{selectedInvoice.number}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase font-semibold">Montant</p>
+                    <p className="text-lg font-semibold text-gray-900 mt-1">€{selectedInvoice.amount.toLocaleString()}</p>
+                  </div>
+                </div>
+                <div className="border-t pt-4">
+                  <p className="text-xs text-gray-600 uppercase font-semibold">Client</p>
+                  <p className="text-gray-900 mt-1">{selectedInvoice.company}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 uppercase font-semibold">Articles</p>
+                  <p className="text-gray-900 mt-1">{selectedInvoice.items} articles</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4 border-t pt-4">
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase font-semibold">Date d'émission</p>
+                    <p className="text-gray-900 mt-1">{new Date(selectedInvoice.issueDate).toLocaleDateString('fr-FR')}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase font-semibold">Date d'échéance</p>
+                    <p className="text-gray-900 mt-1">{new Date(selectedInvoice.dueDate).toLocaleDateString('fr-FR')}</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 uppercase font-semibold">Statut</p>
+                  <Badge className={`${getStatusColor(selectedInvoice.status)} mt-1`}>
+                    {getStatusIcon(selectedInvoice.status)}
+                    {getStatusLabel(selectedInvoice.status)}
+                  </Badge>
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsEditingInvoice(true)}
+                    className="flex-1 flex items-center justify-center gap-2"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Modifier
+                  </Button>
+                  <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
+                    Exporter
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="edit-invoice-number" className="text-sm font-medium">Numéro de facture</Label>
+                  <Input
+                    id="edit-invoice-number"
+                    value={selectedInvoice.number}
+                    disabled
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-company" className="text-sm font-medium">Client</Label>
+                  <Input
+                    id="edit-company"
+                    value={selectedInvoice.company}
+                    disabled
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-amount" className="text-sm font-medium">Montant (€)</Label>
+                  <Input
+                    id="edit-amount"
+                    type="number"
+                    value={selectedInvoice.amount}
+                    disabled
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-issueDate" className="text-sm font-medium">Date d'émission</Label>
+                  <Input
+                    id="edit-issueDate"
+                    type="date"
+                    value={selectedInvoice.issueDate}
+                    disabled
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-dueDate" className="text-sm font-medium">Date d'échéance</Label>
+                  <Input
+                    id="edit-dueDate"
+                    type="date"
+                    value={selectedInvoice.dueDate}
+                    disabled
+                    className="mt-1"
+                  />
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <Button variant="outline" onClick={() => setIsEditingInvoice(false)} className="flex-1">
+                    Annuler
+                  </Button>
+                  <Button disabled className="flex-1 bg-blue-600 hover:bg-blue-700">
+                    Enregistrer
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

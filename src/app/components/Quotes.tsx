@@ -13,6 +13,15 @@ import {
   DropdownMenuTrigger,
 } from '@/app/components/ui/dropdown-menu';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/app/components/ui/alert-dialog';
+import {
   FileText,
   Plus,
   Eye,
@@ -35,7 +44,9 @@ import {
   Grid3x3,
   List,
   Kanban,
-  Search
+  Search,
+  Edit,
+  Trash2
 } from 'lucide-react';
 
 interface QuoteItem {
@@ -124,6 +135,10 @@ const Quotes = () => {
   const [openActionsFor, setOpenActionsFor] = useState<number | null>(null);
   const [showNewQuote, setShowNewQuote] = useState(false);
   const [showQuotePreview, setShowQuotePreview] = useState(false);
+  const [showQuoteDetails, setShowQuoteDetails] = useState(false);
+  const [isEditingQuote, setIsEditingQuote] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
   const [showCustomization, setShowCustomization] = useState(false);
   const [showFollowUp, setShowFollowUp] = useState(false);
   const [showConvertToSignature, setShowConvertToSignature] = useState(false);
@@ -140,6 +155,15 @@ const Quotes = () => {
     items: [
       { id: 1, description: '', quantity: 1, unitPrice: 0 }
     ]
+  });
+
+  const [editQuoteForm, setEditQuoteForm] = useState({
+    company: '',
+    contact: '',
+    expiryDate: '',
+    taxRate: '20',
+    notes: '',
+    items: [] as QuoteItem[]
   });
 
   const [customForm, setCustomForm] = useState({
@@ -195,6 +219,40 @@ const Quotes = () => {
   const totalValue = quotes
     .filter(q => q.status !== 'rejected' && q.status !== 'expired')
     .reduce((sum, q) => sum + (q.totalAmount * (1 + q.taxRate / 100)), 0);
+
+  const handleDeleteQuote = (id: number) => {
+    setDeleteTarget(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget !== null) {
+      setQuotes(quotes.filter(q => q.id !== deleteTarget));
+      setShowDeleteConfirm(false);
+      setDeleteTarget(null);
+      setShowQuoteDetails(false);
+    }
+  };
+
+  const handleEditQuote = () => {
+    if (selectedQuote && editQuoteForm.company && editQuoteForm.contact) {
+      setQuotes(quotes.map(q =>
+        q.id === selectedQuote.id ? {
+          ...q,
+          company: editQuoteForm.company,
+          contact: editQuoteForm.contact,
+          expiryDate: editQuoteForm.expiryDate,
+          taxRate: parseInt(editQuoteForm.taxRate),
+          notes: editQuoteForm.notes,
+          items: editQuoteForm.items,
+          totalAmount: editQuoteForm.items.reduce((sum, i) => sum + i.total, 0)
+        } : q
+      ));
+      setIsEditingQuote(false);
+      setShowQuoteDetails(false);
+      setSelectedQuote(null);
+    }
+  };
 
   const handleCreateQuote = () => {
     if (newQuoteForm.company && newQuoteForm.contact && newQuoteForm.items.some(i => i.description)) {
@@ -522,9 +580,45 @@ const Quotes = () => {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>Voir</DropdownMenuItem>
-                          <DropdownMenuItem>Modifier</DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">Supprimer</DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              setSelectedQuote(quote);
+                              setShowQuoteDetails(true);
+                              setOpenActionsFor(null);
+                            }}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            Voir
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              setSelectedQuote(quote);
+                              setEditQuoteForm({
+                                company: quote.company,
+                                contact: quote.contact,
+                                expiryDate: quote.expiryDate,
+                                taxRate: quote.taxRate.toString(),
+                                notes: quote.notes,
+                                items: quote.items
+                              });
+                              setIsEditingQuote(true);
+                              setShowQuoteDetails(true);
+                              setOpenActionsFor(null);
+                            }}
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Modifier
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="text-red-600"
+                            onClick={() => {
+                              handleDeleteQuote(quote.id);
+                              setOpenActionsFor(null);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Supprimer
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </td>
@@ -614,6 +708,198 @@ const Quotes = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Quote Details Dialog */}
+      {selectedQuote && (
+        <Dialog open={showQuoteDetails} onOpenChange={(open) => {
+          setShowQuoteDetails(open);
+          if (!open) {
+            setIsEditingQuote(false);
+          }
+        }}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {isEditingQuote ? 'Modifier le devis' : 'Détails du devis'}
+              </DialogTitle>
+            </DialogHeader>
+
+            {isEditingQuote ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-company" className="text-sm font-medium">Entreprise *</Label>
+                    <Input
+                      id="edit-company"
+                      value={editQuoteForm.company}
+                      onChange={(e) => setEditQuoteForm({...editQuoteForm, company: e.target.value})}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-contact" className="text-sm font-medium">Contact *</Label>
+                    <Input
+                      id="edit-contact"
+                      value={editQuoteForm.contact}
+                      onChange={(e) => setEditQuoteForm({...editQuoteForm, contact: e.target.value})}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-expiryDate" className="text-sm font-medium">Date d'expiration</Label>
+                    <Input
+                      id="edit-expiryDate"
+                      type="date"
+                      value={editQuoteForm.expiryDate}
+                      onChange={(e) => setEditQuoteForm({...editQuoteForm, expiryDate: e.target.value})}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-taxRate" className="text-sm font-medium">Taux TVA (%)</Label>
+                    <Input
+                      id="edit-taxRate"
+                      type="number"
+                      value={editQuoteForm.taxRate}
+                      onChange={(e) => setEditQuoteForm({...editQuoteForm, taxRate: e.target.value})}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="edit-notes" className="text-sm font-medium">Notes</Label>
+                  <textarea
+                    id="edit-notes"
+                    value={editQuoteForm.notes}
+                    onChange={(e) => setEditQuoteForm({...editQuoteForm, notes: e.target.value})}
+                    rows={3}
+                    className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <Button variant="outline" onClick={() => setIsEditingQuote(false)} className="flex-1">
+                    Annuler
+                  </Button>
+                  <Button onClick={handleEditQuote} className="flex-1 bg-blue-600 hover:bg-blue-700">
+                    Enregistrer
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase font-semibold">Devis</p>
+                    <p className="text-lg font-semibold text-gray-900 mt-1">{selectedQuote.quoteNumber}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase font-semibold">Statut</p>
+                    <Badge className={`${getStatusColor(selectedQuote.status)} mt-1`}>
+                      {statusLabels[selectedQuote.status as keyof typeof statusLabels]}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  <p className="text-xs text-gray-600 uppercase font-semibold mb-3">Informations</p>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Entreprise:</span>
+                      <span className="font-medium text-gray-900">{selectedQuote.company}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Contact:</span>
+                      <span className="font-medium text-gray-900">{selectedQuote.contact}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Date création:</span>
+                      <span className="font-medium text-gray-900">{new Date(selectedQuote.date).toLocaleDateString('fr-FR')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Expiration:</span>
+                      <span className="font-medium text-gray-900">{new Date(selectedQuote.expiryDate).toLocaleDateString('fr-FR')}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  <p className="text-xs text-gray-600 uppercase font-semibold mb-3">Montants</p>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Montant HT:</span>
+                      <span className="font-semibold text-gray-900">€{selectedQuote.totalAmount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Taux TVA:</span>
+                      <span className="font-medium text-gray-900">{selectedQuote.taxRate}%</span>
+                    </div>
+                    <div className="flex justify-between border-t pt-2">
+                      <span className="text-gray-600 font-medium">Total TTC:</span>
+                      <span className="font-bold text-gray-900">€{(selectedQuote.totalAmount * (1 + selectedQuote.taxRate / 100)).toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedQuote.notes && (
+                  <div className="border-t pt-4">
+                    <p className="text-xs text-gray-600 uppercase font-semibold mb-2">Notes</p>
+                    <p className="text-sm text-gray-700">{selectedQuote.notes}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setEditQuoteForm({
+                        company: selectedQuote.company,
+                        contact: selectedQuote.contact,
+                        expiryDate: selectedQuote.expiryDate,
+                        taxRate: selectedQuote.taxRate.toString(),
+                        notes: selectedQuote.notes,
+                        items: selectedQuote.items
+                      });
+                      setIsEditingQuote(true);
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Modifier
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="flex-1 text-red-600 hover:text-red-700"
+                    onClick={() => handleDeleteQuote(selectedQuote.id)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Supprimer
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer le devis</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer ce devis ? Cette action ne peut pas être annulée.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-3">
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
+              Supprimer
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

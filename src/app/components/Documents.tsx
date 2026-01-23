@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/app/components/ui/alert-dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/app/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
 import { Input } from '@/app/components/ui/input';
 import { Badge } from '@/app/components/ui/badge';
@@ -176,6 +178,24 @@ const Documents = () => {
       version: 1
     }
   ] as Document[]);
+
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
+
+  const handleDeleteDocument = (id: number) => {
+    setDeleteTarget(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget !== null) {
+      const docName = documents.find(d => d.id === deleteTarget)?.name;
+      setDocuments(documents.filter(d => d.id !== deleteTarget));
+      alert(`Document ${docName} supprimé avec succès!`);
+      setDeleteConfirmOpen(false);
+      setDeleteTarget(null);
+    }
+  };
 
   const categories = [
     { id: 'all', name: 'Tous', count: documents.length },
@@ -480,7 +500,7 @@ const Documents = () => {
       </div>
 
       {/* Search and View Controls */}
-      <div className="flex flex-col md:flex-row gap-4 mb-8 items-stretch md:items-center">
+      <div className="flex flex-col gap-4 mb-8">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           <Input
@@ -491,36 +511,39 @@ const Documents = () => {
             className="pl-10 bg-white border-2 border-gray-300 focus:border-blue-500 h-11"
           />
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap sm:flex-nowrap">
           <button
             onClick={() => setViewMode('grid')}
-            className={`px-4 py-2 rounded-lg transition-all flex items-center gap-2 ${
+            className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg transition-all flex items-center justify-center gap-2 ${
               viewMode === 'grid'
                 ? 'bg-blue-600 text-white border-2 border-blue-600'
                 : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
             }`}
           >
             <Grid3x3 className="h-4 w-4" />
+            <span className="hidden md:inline text-sm">Grille</span>
           </button>
           <button
             onClick={() => setViewMode('list')}
-            className={`px-4 py-2 rounded-lg transition-all flex items-center gap-2 ${
+            className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg transition-all flex items-center justify-center gap-2 ${
               viewMode === 'list'
                 ? 'bg-blue-600 text-white border-2 border-blue-600'
                 : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
             }`}
           >
             <List className="h-4 w-4" />
+            <span className="hidden md:inline text-sm">Liste</span>
           </button>
           <button
             onClick={() => setViewMode('kanban')}
-            className={`px-4 py-2 rounded-lg transition-all flex items-center gap-2 ${
+            className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg transition-all flex items-center justify-center gap-2 ${
               viewMode === 'kanban'
                 ? 'bg-blue-600 text-white border-2 border-blue-600'
                 : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
             }`}
           >
             <Kanban className="h-4 w-4" />
+            <span className="hidden md:inline text-sm">Kanban</span>
           </button>
         </div>
       </div>
@@ -549,9 +572,30 @@ const Documents = () => {
                         <h3 className="font-bold text-gray-900 text-sm line-clamp-2">{doc.name}</h3>
                         <p className="text-xs text-gray-500 mt-1">{doc.size}</p>
                       </div>
-                      <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                        <MoreVertical className="h-4 w-4 text-gray-400" />
-                      </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0">
+                            <MoreVertical className="h-4 w-4 text-gray-600" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40">
+                          <DropdownMenuItem className="flex items-center gap-2 cursor-pointer text-blue-600 hover:text-blue-700">
+                            <Download className="h-4 w-4" />
+                            Télécharger
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="flex items-center gap-2 cursor-pointer text-indigo-600 hover:text-indigo-700">
+                            <Eye className="h-4 w-4" />
+                            Voir
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="flex items-center gap-2 cursor-pointer text-red-600 hover:text-red-700"
+                            onSelect={() => handleDeleteDocument(doc.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Supprimer
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
 
                     {/* Metadata */}
@@ -590,22 +634,11 @@ const Documents = () => {
                       </div>
                     )}
 
-                    {/* Status and Actions */}
+                    {/* Status */}
                     <div className="flex justify-between items-center pt-3">
                       <Badge className={`${getStatusColor(doc.status)} text-xs`}>
                         {getStatusLabel(doc.status)}
                       </Badge>
-                      <div className="flex gap-2">
-                        <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Télécharger">
-                          <Download className="h-4 w-4" />
-                        </button>
-                        <button className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Voir">
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Supprimer">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -760,14 +793,40 @@ const Documents = () => {
                     statusDocuments.map((doc) => (
                       <Card key={doc.id} className="border-0 shadow-sm hover:shadow-md transition-shadow bg-white cursor-move">
                         <CardContent className="p-4">
-                          <div className="flex items-start gap-3 mb-3">
-                            <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
-                              {getFileIcon(doc.type)}
+                          <div className="flex items-start gap-3 mb-3 justify-between">
+                            <div className="flex items-start gap-3 flex-1 min-w-0">
+                              <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                                {getFileIcon(doc.type)}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-gray-900 text-sm line-clamp-2">{doc.name}</p>
+                                <p className="text-xs text-gray-500 mt-1">{doc.size}</p>
+                              </div>
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-gray-900 text-sm line-clamp-2">{doc.name}</p>
-                              <p className="text-xs text-gray-500 mt-1">{doc.size}</p>
-                            </div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button className="p-1 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0">
+                                  <MoreVertical className="h-4 w-4 text-gray-600" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-40">
+                                <DropdownMenuItem className="flex items-center gap-2 cursor-pointer text-blue-600 hover:text-blue-700">
+                                  <Download className="h-4 w-4" />
+                                  Télécharger
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="flex items-center gap-2 cursor-pointer text-indigo-600 hover:text-indigo-700">
+                                  <Eye className="h-4 w-4" />
+                                  Voir
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  className="flex items-center gap-2 cursor-pointer text-red-600 hover:text-red-700"
+                                  onSelect={() => handleDeleteDocument(doc.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  Supprimer
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
                           
                           <div className="space-y-2 py-3 border-t border-b border-gray-200">
@@ -799,18 +858,6 @@ const Documents = () => {
                               )}
                             </div>
                           )}
-
-                          <div className="flex gap-2 pt-3 mt-3 border-t">
-                            <button className="flex-1 p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-xs font-medium" title="Télécharger">
-                              <Download className="h-4 w-4 mx-auto" />
-                            </button>
-                            <button className="flex-1 p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors text-xs font-medium" title="Voir">
-                              <Eye className="h-4 w-4 mx-auto" />
-                            </button>
-                            <button className="flex-1 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-xs font-medium" title="Supprimer">
-                              <Trash2 className="h-4 w-4 mx-auto" />
-                            </button>
-                          </div>
                         </CardContent>
                       </Card>
                     ))
