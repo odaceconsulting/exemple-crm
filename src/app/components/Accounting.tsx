@@ -220,12 +220,22 @@ const Accounting = () => {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 bg-white border border-gray-200">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-8">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-2 bg-transparent border-0 p-0">
           {(['sales', 'purchases', 'expenses', 'receipts'] as const).map(tab => (
-            <TabsTrigger key={tab} value={tab} className="flex items-center gap-2">
-              {getTabIcon(tab)}
-              <span className="hidden sm:inline">{getTabLabel(tab)}</span>
+            <TabsTrigger 
+              key={tab} 
+              value={tab} 
+              className={`flex flex-col sm:flex-row items-center justify-center gap-1 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 ${
+                activeTab === tab
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-md'
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600'
+              }`}
+            >
+              <div className="h-4 w-4">
+                {getTabIcon(tab)}
+              </div>
+              <span className="text-xs sm:text-sm">{getTabLabel(tab)}</span>
             </TabsTrigger>
           ))}
         </TabsList>

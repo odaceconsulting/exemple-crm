@@ -208,46 +208,41 @@ const SettingsComponent = () => {
       {/* Tabs */}
       <Card className="border-0 shadow-md">
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className="w-full border-b-2 border-gray-200 rounded-none bg-gradient-to-r from-gray-50 to-blue-50 p-0 overflow-x-auto">
+          <TabsList className="w-full gap-2 bg-transparent border-0 p-4 rounded-none">
             <TabsTrigger 
               value="general" 
-              className="px-3 md:px-6 py-4 border-b-3 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-blue-50 rounded-none flex items-center gap-2 whitespace-nowrap text-sm md:text-base text-gray-600 data-[state=active]:text-blue-600 hover:text-blue-500 transition-all duration-200"
+              className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
             >
-              <Settings className="h-4 w-4 md:h-5 md:w-5" />
-              <span className="hidden sm:inline font-medium">Général</span>
-              <span className="sm:hidden font-medium">Gén.</span>
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">Général</span>
             </TabsTrigger>
             <TabsTrigger 
               value="notifications" 
-              className="px-3 md:px-6 py-4 border-b-3 border-transparent data-[state=active]:border-orange-600 data-[state=active]:bg-orange-50 rounded-none flex items-center gap-2 whitespace-nowrap text-sm md:text-base text-gray-600 data-[state=active]:text-orange-600 hover:text-orange-500 transition-all duration-200"
+              className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
             >
-              <Bell className="h-4 w-4 md:h-5 md:w-5" />
-              <span className="hidden sm:inline font-medium">Notifications</span>
-              <span className="sm:hidden font-medium">Notif.</span>
+              <Bell className="h-4 w-4" />
+              <span className="hidden sm:inline">Notifications</span>
             </TabsTrigger>
             <TabsTrigger 
               value="integrations" 
-              className="px-3 md:px-6 py-4 border-b-3 border-transparent data-[state=active]:border-purple-600 data-[state=active]:bg-purple-50 rounded-none flex items-center gap-2 whitespace-nowrap text-sm md:text-base text-gray-600 data-[state=active]:text-purple-600 hover:text-purple-500 transition-all duration-200"
+              className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
             >
-              <Zap className="h-4 w-4 md:h-5 md:w-5" />
-              <span className="hidden sm:inline font-medium">Intégrations</span>
-              <span className="sm:hidden font-medium">Intég.</span>
+              <Zap className="h-4 w-4" />
+              <span className="hidden sm:inline">Intégrations</span>
             </TabsTrigger>
             <TabsTrigger 
               value="users" 
-              className="px-3 md:px-6 py-4 border-b-3 border-transparent data-[state=active]:border-green-600 data-[state=active]:bg-green-50 rounded-none flex items-center gap-2 whitespace-nowrap text-sm md:text-base text-gray-600 data-[state=active]:text-green-600 hover:text-green-500 transition-all duration-200"
+              className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
             >
-              <Users className="h-4 w-4 md:h-5 md:w-5" />
-              <span className="hidden sm:inline font-medium">Utilisateurs</span>
-              <span className="sm:hidden font-medium">Utilis.</span>
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">Utilisateurs</span>
             </TabsTrigger>
             <TabsTrigger 
               value="security" 
-              className="px-3 md:px-6 py-4 border-b-3 border-transparent data-[state=active]:border-red-600 data-[state=active]:bg-red-50 rounded-none flex items-center gap-2 whitespace-nowrap text-sm md:text-base text-gray-600 data-[state=active]:text-red-600 hover:text-red-500 transition-all duration-200"
+              className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
             >
-              <Lock className="h-4 w-4 md:h-5 md:w-5" />
-              <span className="hidden sm:inline font-medium">Sécurité</span>
-              <span className="sm:hidden font-medium">Sécur.</span>
+              <Lock className="h-4 w-4" />
+              <span className="hidden sm:inline">Sécurité</span>
             </TabsTrigger>
           </TabsList>
 

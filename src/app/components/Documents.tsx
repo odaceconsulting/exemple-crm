@@ -474,24 +474,59 @@ const Documents = () => {
       {/* Navigation Tabs */}
       <div className="mb-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-0 bg-white p-0 rounded-lg border-2 border-gray-300 shadow-md overflow-hidden">
-            <TabsTrigger value="all" className="flex items-center justify-center gap-2 text-xs md:text-sm rounded-none border-r border-gray-300 last:border-r-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-50 data-[state=active]:to-indigo-50 data-[state=active]:text-blue-700 data-[state=active]:font-bold hover:bg-gray-50">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-2 bg-transparent border-0 p-0">
+            <TabsTrigger 
+              value="all" 
+              className={`flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 ${
+                activeTab === 'all'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-md'
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600'
+              }`}
+            >
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline">Tous</span>
             </TabsTrigger>
-            <TabsTrigger value="recent" className="flex items-center justify-center gap-2 text-xs md:text-sm rounded-none border-r border-gray-300 last:border-r-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-50 data-[state=active]:to-indigo-50 data-[state=active]:text-blue-700 data-[state=active]:font-bold hover:bg-gray-50">
+            <TabsTrigger 
+              value="recent" 
+              className={`flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 ${
+                activeTab === 'recent'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-md'
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600'
+              }`}
+            >
               <Clock className="h-4 w-4" />
               <span className="hidden sm:inline">Récents</span>
             </TabsTrigger>
-            <TabsTrigger value="approved" className="flex items-center justify-center gap-2 text-xs md:text-sm rounded-none border-r border-gray-300 last:border-r-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-50 data-[state=active]:to-indigo-50 data-[state=active]:text-blue-700 data-[state=active]:font-bold hover:bg-gray-50">
+            <TabsTrigger 
+              value="approved" 
+              className={`flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 ${
+                activeTab === 'approved'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-md'
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600'
+              }`}
+            >
               <CheckCircle className="h-4 w-4" />
               <span className="hidden sm:inline">Approuvés</span>
             </TabsTrigger>
-            <TabsTrigger value="pending" className="flex items-center justify-center gap-2 text-xs md:text-sm rounded-none border-r border-gray-300 last:border-r-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-50 data-[state=active]:to-indigo-50 data-[state=active]:text-blue-700 data-[state=active]:font-bold hover:bg-gray-50">
+            <TabsTrigger 
+              value="pending" 
+              className={`flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 ${
+                activeTab === 'pending'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-md'
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600'
+              }`}
+            >
               <AlertCircle className="h-4 w-4" />
               <span className="hidden sm:inline">Attente</span>
             </TabsTrigger>
-            <TabsTrigger value="shared" className="flex items-center justify-center gap-2 text-xs md:text-sm rounded-none data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-50 data-[state=active]:to-indigo-50 data-[state=active]:text-blue-700 data-[state=active]:font-bold hover:bg-gray-50">
+            <TabsTrigger 
+              value="shared" 
+              className={`flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 ${
+                activeTab === 'shared'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-md'
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600'
+              }`}
+            >
               <Share2 className="h-4 w-4" />
               <span className="hidden sm:inline">Partagés</span>
             </TabsTrigger>
@@ -886,22 +921,34 @@ const Documents = () => {
         <Card className="border-0 shadow-xl">
           <CardContent className="p-0">
             <Tabs defaultValue="workflow" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-0 bg-gradient-to-r from-slate-50 to-blue-50 p-0 rounded-lg border-b-2 border-gray-300 overflow-hidden">
-                <TabsTrigger value="workflow" className="flex items-center justify-center gap-2 text-xs md:text-sm rounded-none border-r border-gray-200 last:border-r-0 data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:font-bold data-[state=active]:shadow-md hover:bg-white transition-all py-4">
-                  <FileCheck className="h-5 w-5" />
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-2 bg-transparent border-0 p-4">
+                <TabsTrigger 
+                  value="workflow" 
+                  className="flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
+                >
+                  <FileCheck className="h-4 w-4" />
                   <span className="hidden sm:inline">Workflows</span>
                 </TabsTrigger>
-                <TabsTrigger value="versioning" className="flex items-center justify-center gap-2 text-xs md:text-sm rounded-none border-r border-gray-200 last:border-r-0 data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:font-bold data-[state=active]:shadow-md hover:bg-white transition-all py-4">
-                  <History className="h-5 w-5" />
+                <TabsTrigger 
+                  value="versioning" 
+                  className="flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
+                >
+                  <History className="h-4 w-4" />
                   <span className="hidden sm:inline">Versions</span>
                 </TabsTrigger>
-                <TabsTrigger value="access" className="flex items-center justify-center gap-2 text-xs md:text-sm rounded-none border-r border-gray-200 last:border-r-0 data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:font-bold data-[state=active]:shadow-md hover:bg-white transition-all py-4">
-                  <Lock className="h-5 w-5" />
+                <TabsTrigger 
+                  value="access" 
+                  className="flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
+                >
+                  <Lock className="h-4 w-4" />
                   <span className="hidden sm:inline">Accès</span>
                 </TabsTrigger>
-                <TabsTrigger value="classification" className="flex items-center justify-center gap-2 text-xs md:text-sm rounded-none data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:font-bold data-[state=active]:shadow-md hover:bg-white transition-all py-4">
-                  <Zap className="h-5 w-5" />
-                  <span className="hidden sm:inline">Classification IA</span>
+                <TabsTrigger 
+                  value="classification" 
+                  className="flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
+                >
+                  <Zap className="h-4 w-4" />
+                  <span className="hidden sm:inline">Classification</span>
                 </TabsTrigger>
               </TabsList>
 
