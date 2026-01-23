@@ -19,7 +19,8 @@ import {
   Download,
   MoreVertical,
   MessageSquare,
-  Calendar
+  Calendar,
+  MessageCircle
 } from 'lucide-react';
 
 interface Contact {
@@ -320,6 +321,9 @@ const Contacts = () => {
                     Score
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Contacter
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -384,6 +388,24 @@ const Contacts = () => {
                         <span className={`text-sm font-medium ${getScoreColor(contact.score)}`}>
                           {contact.score}
                         </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <button 
+                          onClick={() => window.location.href = `tel:${contact.mobile}`}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" 
+                          title="Appeler"
+                        >
+                          <Phone className="h-4 w-4" />
+                        </button>
+                        <button 
+                          onClick={() => window.location.href = `https://wa.me/${contact.mobile.replace(/\\D/g, '')}`}
+                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" 
+                          title="WhatsApp"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                        </button>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
