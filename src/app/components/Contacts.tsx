@@ -6,6 +6,12 @@ import { Label } from '@/app/components/ui/label';
 import { Button } from '@/app/components/ui/button';
 import { Badge } from '@/app/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/app/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/app/components/ui/dropdown-menu';
 import { 
   Users, 
   Search, 
@@ -20,7 +26,11 @@ import {
   MoreVertical,
   MessageSquare,
   Calendar,
-  MessageCircle
+  MessageCircle,
+  Grid3x3,
+  List,
+  Kanban,
+  Send
 } from 'lucide-react';
 
 interface Contact {
@@ -40,6 +50,8 @@ interface Contact {
 const Contacts = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'kanban'>('grid');
+  const [openActionsFor, setOpenActionsFor] = useState<number | null>(null);
 
   const contacts: Contact[] = [
     {
@@ -161,7 +173,7 @@ const Contacts = () => {
       case 'lead':
         return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'partner':
-        return 'bg-purple-100 text-purple-700 border-purple-200';
+        return 'bg-blue-100 text-blue-700 border-blue-200';
       default:
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }
@@ -191,26 +203,23 @@ const Contacts = () => {
   };
 
   return (
-    <div className="p-6 space-y-6 bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 p-4 md:p-8">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-semibold text-gray-900">Contacts</h1>
-          <p className="text-gray-500 mt-1">Gérez vos contacts et interlocuteurs</p>
-        </div>
-        <div className="flex gap-3">
-          <button className="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            Filtrer
-          </button>
-          <button className="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
-            <Download className="h-4 w-4" />
-            Export
-          </button>
+      <div className="mb-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 flex items-center gap-3">
+        <div className="p-3 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl">
+                <Users className="h-8 w-8 text-white" />
+              </div>
+              Contacts
+            </h1>
+            <p className="text-gray-600 mt-2">Gérez vos contacts et interlocuteurs</p>
+          </div>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors flex items-center gap-2 border-2 border-blue-700">
-                <Plus className="h-4 w-4" />
+              <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-full hover:from-blue-700 hover:to-cyan-700 transition-all flex items-center gap-2 border-2 border-blue-700 shadow-lg hover:shadow-xl font-semibold">
+                <Plus className="h-5 w-5" />
                 Nouveau Contact
               </button>
             </DialogTrigger>
@@ -269,112 +278,245 @@ const Contacts = () => {
         </div>
       </div>
 
-      {/* Search and Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <Card className="lg:col-span-3 border-0 shadow-sm">
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <Card className="border-0 shadow-md hover:shadow-lg transition-shadow bg-white">
           <CardContent className="p-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Rechercher un contact par nom, entreprise ou poste..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm text-gray-600 font-medium">Total Contacts</p>
+                <p className="text-3xl font-bold text-blue-600 mt-2">{contacts.length}</p>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <Users className="h-6 w-6 text-blue-600" />
+              </div>
             </div>
           </CardContent>
         </Card>
-
-        <Card className="border-0 shadow-sm bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+        <Card className="border-0 shadow-md hover:shadow-lg transition-shadow bg-white">
           <CardContent className="p-6">
-            <Users className="h-8 w-8 mb-2 opacity-80" />
-            <p className="text-3xl font-bold">{contacts.length}</p>
-            <p className="text-purple-100 text-sm">Contacts totaux</p>
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm text-gray-600 font-medium">Clients</p>
+                <p className="text-3xl font-bold text-green-600 mt-2">{contacts.filter(c => c.status === 'client').length}</p>
+              </div>
+              <div className="p-3 bg-green-100 rounded-lg">
+                <Building2 className="h-6 w-6 text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-md hover:shadow-lg transition-shadow bg-white">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm text-gray-600 font-medium">Leads</p>
+                <p className="text-3xl font-bold text-blue-600 mt-2">{contacts.filter(c => c.status === 'lead').length}</p>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <Search className="h-6 w-6 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-md hover:shadow-lg transition-shadow bg-white">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm text-gray-600 font-medium">Partenaires</p>
+                <p className="text-3xl font-bold text-orange-600 mt-2">{contacts.filter(c => c.status === 'partner').length}</p>
+              </div>
+              <div className="p-3 bg-orange-100 rounded-lg">
+                <Filter className="h-6 w-6 text-orange-600" />
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Contacts Table */}
-      <Card className="border-0 shadow-sm">
-        <CardContent className="p-0">
+      {/* Search and View Controls */}
+      <div className="flex flex-col md:flex-row gap-4 mb-8 items-stretch md:items-center">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <Input
+            type="text"
+            placeholder="Rechercher un contact par nom, entreprise ou poste..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 bg-white border-2 border-gray-300 focus:border-blue-500 h-11"
+          />
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`px-4 py-2 rounded-lg transition-all flex items-center gap-2 ${
+              viewMode === 'grid'
+                ? 'bg-blue-600 text-white border-2 border-blue-600'
+                : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+            title="Vue grille"
+          >
+            <Grid3x3 className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`px-4 py-2 rounded-lg transition-all flex items-center gap-2 ${
+              viewMode === 'list'
+                ? 'bg-blue-600 text-white border-2 border-blue-600'
+                : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+            title="Vue liste"
+          >
+            <List className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('kanban')}
+            className={`px-4 py-2 rounded-lg transition-all flex items-center gap-2 ${
+              viewMode === 'kanban'
+                ? 'bg-blue-600 text-white border-2 border-blue-600'
+                : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+            title="Vue kanban"
+          >
+            <Kanban className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* GRID VIEW */}
+      {viewMode === 'grid' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredContacts.map((contact) => (
+            <Card key={contact.id} className="hover:shadow-lg transition-all border-0 bg-white">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <Avatar>
+                      <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
+                        {getInitials(contact.firstName, contact.lastName)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{contact.firstName} {contact.lastName}</h3>
+                      <p className="text-sm text-gray-500">{contact.position}</p>
+                    </div>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="p-2 hover:bg-gray-100 rounded-lg">
+                        <MoreVertical className="h-4 w-4 text-gray-500" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>Éditer</DropdownMenuItem>
+                      <DropdownMenuItem className="text-red-600">Supprimer</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">{contact.company}</span>
+                  </div>
+                  <div className="flex items-center gap-2 pt-2">
+                    <Mail className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm text-gray-600 truncate">{contact.email}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">{contact.mobile}</span>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      contact.status === 'client' ? 'bg-green-100 text-green-700' :
+                      contact.status === 'lead' ? 'bg-blue-100 text-blue-700' :
+                      'bg-orange-100 text-orange-700'
+                    }`}>
+                      {contact.status === 'client' ? '🟢 Client' : 
+                       contact.status === 'lead' ? '🔵 Lead' : 
+                       '🟠 Partenaire'}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <div className="flex-1 bg-gray-200 rounded-full h-2 w-12">
+                        <div
+                          className={`h-2 rounded-full ${
+                            contact.score >= 80 ? 'bg-green-500' : 
+                            contact.score >= 60 ? 'bg-orange-500' : 'bg-red-500'
+                          }`}
+                          style={{ width: `${contact.score}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-xs font-medium text-gray-600">{contact.score}</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* LIST VIEW */}
+      {viewMode === 'list' && (
+        <div className="bg-white rounded-lg shadow-md border-0 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Contact
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Poste
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Entreprise
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Contact
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Statut
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Score
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Contacter
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
+              <thead>
+                <tr className="bg-gradient-to-r from-blue-50 to-cyan-50 border-b-2 border-gray-200">
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Contact</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Poste</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Entreprise</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Email</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Téléphone</th>
+                  <th className="px-6 py-4 text-center text-sm font-bold text-gray-900">WhatsApp</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Statut</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Score</th>
+                  <th className="px-6 py-4 text-center text-sm font-bold text-gray-900">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredContacts.map((contact) => (
-                  <tr key={contact.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
+              <tbody>
+                {filteredContacts.map((contact, index) => (
+                  <tr key={contact.id} className={`border-b border-gray-100 hover:bg-blue-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                    <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <Avatar>
-                          <AvatarFallback className="bg-blue-100 text-blue-600 font-medium">
+                          <AvatarFallback className="bg-blue-100 text-blue-600 font-medium text-sm">
                             {getInitials(contact.firstName, contact.lastName)}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium text-gray-900">
-                            {contact.firstName} {contact.lastName}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            Dernier contact: {new Date(contact.lastContact).toLocaleDateString('fr-FR')}
-                          </p>
+                          <p className="font-semibold text-gray-900">{contact.firstName} {contact.lastName}</p>
+                          <p className="text-xs text-gray-500">Dernier contact: {new Date(contact.lastContact).toLocaleDateString('fr-FR')}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="text-sm text-gray-900">{contact.position}</p>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4 text-gray-400" />
-                        <p className="text-sm text-gray-900">{contact.company}</p>
-                      </div>
+                    <td className="px-6 py-4 text-sm text-gray-700">{contact.position}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700">{contact.company}</td>
+                    <td className="px-6 py-4 text-sm text-blue-600">{contact.email}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700">{contact.mobile}</td>
+                    <td className="px-6 py-4 text-center">
+                      <button className="p-2 hover:bg-green-100 rounded-lg transition-colors inline-flex" title="WhatsApp">
+                        <svg className="h-5 w-5 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a9.87 9.87 0 00-4.968 1.495c-1.53.92-2.779 2.292-3.514 3.957 1.224-1.551 3.12-2.566 5.297-2.566.664 0 1.308.091 1.927.253 1.495.338 2.779 1.295 3.651 2.608.594-.982.916-2.127.916-3.337 0-1.903-.78-3.62-2.042-4.868-.72.542-1.576.939-2.263 1.258" />
+                        </svg>
+                      </button>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Mail className="h-3 w-3" />
-                          <span className="truncate max-w-[200px]">{contact.email}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Phone className="h-3 w-3" />
-                          <span>{contact.mobile}</span>
-                        </div>
-                      </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        contact.status === 'client' ? 'bg-green-100 text-green-700' :
+                        contact.status === 'lead' ? 'bg-blue-100 text-blue-700' :
+                        'bg-orange-100 text-orange-700'
+                      }`}>
+                        {contact.status === 'client' ? '🟢 Client' : 
+                         contact.status === 'lead' ? '🔵 Lead' : 
+                         '🟠 Partenaire'}
+                      </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <Badge className={getStatusColor(contact.status)}>
-                        {getStatusLabel(contact.status)}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-[60px]">
                           <div
@@ -390,54 +532,113 @@ const Contacts = () => {
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <button 
-                          onClick={() => window.location.href = `tel:${contact.mobile}`}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" 
-                          title="Appeler"
-                        >
-                          <Phone className="h-4 w-4" />
-                        </button>
-                        <button 
-                          onClick={() => window.location.href = `https://wa.me/${contact.mobile.replace(/\\D/g, '')}`}
-                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" 
-                          title="WhatsApp"
-                        >
-                          <MessageCircle className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Message">
-                          <MessageSquare className="h-4 w-4" />
-                        </button>
-                        <button className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Planifier">
-                          <Calendar className="h-4 w-4" />
-                        </button>
-                        <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" title="Modifier">
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Supprimer">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
+                    <td className="px-6 py-4 text-center">
+                      <DropdownMenu open={openActionsFor === contact.id} onOpenChange={(open) => setOpenActionsFor(open ? contact.id : null)}>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-2 hover:bg-gray-200 rounded-lg inline-flex">
+                            <MoreVertical className="h-4 w-4 text-gray-500" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>Éditer</DropdownMenuItem>
+                          <DropdownMenuItem className="text-red-600">Supprimer</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+        </div>
+      )}
 
-          {filteredContacts.length === 0 && (
-            <div className="p-12 text-center">
-              <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">Aucun contact trouvé</p>
+      {/* KANBAN VIEW */}
+      {viewMode === 'kanban' && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {['lead', 'client', 'partner'].map((status) => (
+            <div key={status} className="space-y-4">
+              <div className="flex items-center gap-3 p-4 bg-white rounded-lg border-2 border-gray-200 shadow-sm">
+                <div className={`w-3 h-3 rounded-full ${
+                  status === 'lead' ? 'bg-blue-500' :
+                  status === 'client' ? 'bg-green-500' :
+                  'bg-orange-500'
+                }`}></div>
+                <h3 className="font-bold text-gray-900">
+                  {status === 'lead' ? '🔵 Leads' :
+                   status === 'client' ? '🟢 Clients' :
+                   '🟠 Partenaires'}
+                </h3>
+                <span className="ml-auto bg-gray-200 text-gray-700 text-xs font-bold px-2 py-1 rounded">
+                  {filteredContacts.filter(c => c.status === status).length}
+                </span>
+              </div>
+
+              <div className="space-y-3 min-h-[400px]">
+                {filteredContacts.filter(c => c.status === status).map((contact) => (
+                  <Card key={contact.id} className="border-2 border-gray-200 shadow-sm hover:shadow-md transition-all bg-white cursor-move">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-8 w-8">
+                              <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold text-xs">
+                                {getInitials(contact.firstName, contact.lastName)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <h4 className="font-semibold text-gray-900 text-sm">{contact.firstName} {contact.lastName}</h4>
+                              <p className="text-xs text-gray-500">{contact.position}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="p-1 hover:bg-gray-100 rounded-lg -mt-1">
+                              <MoreVertical className="h-3 w-3 text-gray-400" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>Éditer</DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-600">Supprimer</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+
+                      <div className="space-y-2 border-t border-gray-100 pt-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-600">Entreprise:</span>
+                          <span className="text-xs font-medium text-gray-900">{contact.company}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-600">Score:</span>
+                          <span className={`text-xs font-medium ${getScoreColor(contact.score)}`}>{contact.score}</span>
+                        </div>
+                        <div className="flex items-center gap-1 mt-2 pt-2 border-t border-gray-100">
+                          <Mail className="h-3 w-3 text-gray-400" />
+                          <span className="text-xs text-gray-600 truncate">{contact.email}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                {filteredContacts.filter(c => c.status === status).length === 0 && (
+                  <p className="text-center text-gray-400 text-sm py-8">Aucun contact</p>
+                )}
+              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          ))}
+        </div>
+      )}
+
+      {filteredContacts.length === 0 && (
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-12 text-center">
+            <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500">Aucun contact trouvé</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

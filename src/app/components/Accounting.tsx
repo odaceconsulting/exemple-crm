@@ -19,7 +19,11 @@ import {
   Receipt,
   ShoppingCart,
   ArrowUpRight,
-  ArrowDownLeft
+  ArrowDownLeft,
+  Grid3x3,
+  List,
+  Kanban,
+  Search
 } from 'lucide-react';
 
 interface Transaction {
@@ -44,6 +48,8 @@ const Accounting = () => {
   const [showNewTransaction, setShowNewTransaction] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'kanban'>('list');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [data, setData] = useState<AccountingData>({
     sales: [
@@ -100,11 +106,17 @@ const Accounting = () => {
 
   const currentData = data[activeTab as keyof AccountingData];
   
-  const totalAmount = currentData.reduce((sum, t) => sum + t.amount, 0);
-  const completedAmount = currentData
+  const filteredData = currentData.filter(t =>
+    t.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    t.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    t.reference.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  
+  const totalAmount = filteredData.reduce((sum, t) => sum + t.amount, 0);
+  const completedAmount = filteredData
     .filter(t => t.status === 'completed')
     .reduce((sum, t) => sum + t.amount, 0);
-  const pendingAmount = currentData
+  const pendingAmount = filteredData
     .filter(t => t.status === 'pending')
     .reduce((sum, t) => sum + t.amount, 0);
 
@@ -231,69 +243,215 @@ const Accounting = () => {
               </Card>
             </div>
 
-            {/* Transactions Table */}
+            {/* Search and View Mode */}
             <Card className="border-0 shadow-sm">
-              <CardHeader>
-                <CardTitle>{getTabLabel(tab)} ({currentData.length})</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Date</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Description</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Catégorie</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Montant</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Référence</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Statut</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {currentData.map(transaction => (
-                        <tr key={transaction.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-6 py-4 text-sm text-gray-600">{new Date(transaction.date).toLocaleDateString('fr-FR')}</td>
-                          <td className="px-6 py-4 text-sm font-medium text-gray-900">{transaction.description}</td>
-                          <td className="px-6 py-4 text-sm text-gray-600">
-                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                              {transaction.category}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm font-semibold text-gray-900">€{transaction.amount.toLocaleString()}</td>
-                          <td className="px-6 py-4 text-sm text-gray-600">{transaction.reference}</td>
-                          <td className="px-6 py-4">
-                            <Badge className={getStatusColor(transaction.status)}>
-                              {statusLabels[transaction.status as keyof typeof statusLabels]}
-                            </Badge>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => {
-                                  setSelectedTransaction(transaction);
-                                  setShowDetails(true);
-                                }}
-                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                                title="Voir détails"
-                              >
-                                <Eye className="h-4 w-4 text-gray-600" />
-                              </button>
-                              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title="Télécharger">
-                                <Download className="h-4 w-4 text-gray-600" />
-                              </button>
-                              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                                <MoreVertical className="h-4 w-4 text-gray-600" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              <CardContent className="p-6">
+                <div className="flex justify-between items-center gap-4">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Input
+                      type="text"
+                      placeholder="Rechercher une transaction..."
+                      value={searchQuery}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setViewMode('grid')}
+                      className={`p-2 rounded-lg transition-colors ${
+                        viewMode === 'grid'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                      }`}
+                      title="Vue grille"
+                    >
+                      <Grid3x3 className="h-5 w-5" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode('list')}
+                      className={`p-2 rounded-lg transition-colors ${
+                        viewMode === 'list'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                      }`}
+                      title="Vue liste"
+                    >
+                      <List className="h-5 w-5" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode('kanban')}
+                      className={`p-2 rounded-lg transition-colors ${
+                        viewMode === 'kanban'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                      }`}
+                      title="Vue kanban"
+                    >
+                      <Kanban className="h-5 w-5" />
+                    </button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
+
+            {/* View Mode: Grid */}
+            {viewMode === 'grid' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredData.map((transaction) => (
+                  <Card key={transaction.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <p className="font-semibold text-gray-900 truncate">{transaction.description}</p>
+                          <p className="text-xs text-gray-500 mt-1">{transaction.reference}</p>
+                        </div>
+                        <Badge className={getStatusColor(transaction.status)}>
+                          {statusLabels[transaction.status as keyof typeof statusLabels]}
+                        </Badge>
+                      </div>
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                            {transaction.category}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <DollarSign className="h-4 w-4" />
+                          <span className="font-semibold text-gray-900">€{transaction.amount.toLocaleString()}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <FileText className="h-4 w-4" />
+                          <span>{new Date(transaction.date).toLocaleDateString('fr-FR')}</span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 pt-4 border-t">
+                        <button
+                          onClick={() => {
+                            setSelectedTransaction(transaction);
+                            setShowDetails(true);
+                          }}
+                          className="flex-1 flex items-center justify-center gap-1 p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-sm"
+                        >
+                          <Eye className="h-4 w-4" />
+                          Voir
+                        </button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {/* View Mode: List */}
+            {viewMode === 'list' && (
+              <Card className="border-0 shadow-sm">
+                <CardHeader>
+                  <CardTitle>{getTabLabel(tab)} ({filteredData.length})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Date</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Description</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Catégorie</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Montant</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Référence</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Statut</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {filteredData.map(transaction => (
+                          <tr key={transaction.id} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-6 py-4 text-sm text-gray-600">{new Date(transaction.date).toLocaleDateString('fr-FR')}</td>
+                            <td className="px-6 py-4 text-sm font-medium text-gray-900">{transaction.description}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                                {transaction.category}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-sm font-semibold text-gray-900">€{transaction.amount.toLocaleString()}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600">{transaction.reference}</td>
+                            <td className="px-6 py-4">
+                              <Badge className={getStatusColor(transaction.status)}>
+                                {statusLabels[transaction.status as keyof typeof statusLabels]}
+                              </Badge>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => {
+                                    setSelectedTransaction(transaction);
+                                    setShowDetails(true);
+                                  }}
+                                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                  title="Voir détails"
+                                >
+                                  <Eye className="h-4 w-4 text-gray-600" />
+                                </button>
+                                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title="Télécharger">
+                                  <Download className="h-4 w-4 text-gray-600" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {filteredData.length === 0 && (
+                    <div className="p-12 text-center">
+                      <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-500">Aucune transaction trouvée</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* View Mode: Kanban */}
+            {viewMode === 'kanban' && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {['pending', 'completed', 'cancelled'].map((status) => {
+                  const statusTransactions = filteredData.filter(t => t.status === status as any);
+                  return (
+                    <div key={status} className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className={`h-3 w-3 rounded-full ${status === 'pending' ? 'bg-orange-400' : status === 'completed' ? 'bg-green-400' : 'bg-red-400'}`}></div>
+                        <h3 className="font-semibold text-gray-900">
+                          {status === 'pending' ? 'En attente' : status === 'completed' ? 'Complété' : 'Annulé'}
+                        </h3>
+                        <span className="ml-auto bg-white px-2 py-1 rounded text-xs font-medium text-gray-600">
+                          {statusTransactions.length}
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        {statusTransactions.map((transaction) => (
+                          <Card key={transaction.id} className="border-0 shadow-sm bg-white cursor-move hover:shadow-md transition-shadow">
+                            <CardContent className="p-3">
+                              <div className="flex items-start justify-between gap-2 mb-2">
+                                <p className="text-sm font-medium text-gray-900 truncate">{transaction.description}</p>
+                                <FileText className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                              </div>
+                              <p className="text-xs text-gray-600 mb-2">{transaction.category}</p>
+                              <div className="pt-2 border-t border-gray-100">
+                                <p className="text-sm font-semibold text-gray-900">€{transaction.amount.toLocaleString()}</p>
+                                <p className="text-xs text-gray-500">{new Date(transaction.date).toLocaleDateString('fr-FR')}</p>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </TabsContent>
         ))}
       </Tabs>

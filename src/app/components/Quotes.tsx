@@ -7,6 +7,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/ta
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/app/components/ui/dialog';
 import { Badge } from '@/app/components/ui/badge';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/app/components/ui/dropdown-menu';
+import {
   FileText,
   Plus,
   Eye,
@@ -25,7 +31,11 @@ import {
   PenTool,
   Bell,
   ArrowRight,
-  X
+  X,
+  Grid3x3,
+  List,
+  Kanban,
+  Search
 } from 'lucide-react';
 
 interface QuoteItem {
@@ -109,6 +119,9 @@ const Quotes = () => {
     }
   ]);
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'kanban'>('grid');
+  const [openActionsFor, setOpenActionsFor] = useState<number | null>(null);
   const [showNewQuote, setShowNewQuote] = useState(false);
   const [showQuotePreview, setShowQuotePreview] = useState(false);
   const [showCustomization, setShowCustomization] = useState(false);
@@ -268,71 +281,91 @@ const Quotes = () => {
   };
 
   return (
-    <div className="p-6 space-y-6 bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 p-4 md:p-8">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-semibold text-gray-900">Devis</h1>
-          <p className="text-gray-500 mt-1">Création et gestion des devis commerciaux</p>
+      <div className="mb-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 flex items-center gap-3">
+              <div className="p-3 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl">
+                <FileText className="h-8 w-8 text-white" />
+              </div>
+              Devis
+            </h1>
+            <p className="text-gray-600 mt-2">Création et gestion des devis commerciaux</p>
+          </div>
+          <button
+            onClick={() => setShowNewQuote(true)}
+            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-full hover:from-blue-700 hover:to-cyan-700 transition-all flex items-center gap-2 border-2 border-blue-700 shadow-lg hover:shadow-xl font-semibold"
+          >
+            <Plus className="h-5 w-5" />
+            Nouveau devis
+          </button>
         </div>
-        <button
-          onClick={() => setShowNewQuote(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors flex items-center gap-2 border-2 border-blue-700"
-        >
-          <Plus className="h-5 w-5" />
-          Nouveau devis
-        </button>
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="border-0 shadow-sm">
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+        <Card className="border-0 shadow-md hover:shadow-lg transition-shadow bg-white">
           <CardContent className="p-6">
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm text-gray-600 font-medium">Brouillons</p>
-                <p className="text-3xl font-semibold text-gray-900 mt-2">{draftQuotes}</p>
+                <p className="text-3xl font-bold text-gray-600 mt-2">{draftQuotes}</p>
               </div>
-              <div className="bg-gray-100 p-3 rounded-lg">
+              <div className="p-3 bg-gray-100 rounded-lg">
                 <Edit2 className="h-6 w-6 text-gray-600" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-0 shadow-sm">
+        <Card className="border-0 shadow-md hover:shadow-lg transition-shadow bg-white">
           <CardContent className="p-6">
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm text-gray-600 font-medium">Envoyés</p>
-                <p className="text-3xl font-semibold text-blue-600 mt-2">{sentQuotes}</p>
+                <p className="text-3xl font-bold text-blue-600 mt-2">{sentQuotes}</p>
               </div>
-              <div className="bg-blue-100 p-3 rounded-lg">
+              <div className="p-3 bg-blue-100 rounded-lg">
                 <Send className="h-6 w-6 text-blue-600" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-0 shadow-sm">
+        <Card className="border-0 shadow-md hover:shadow-lg transition-shadow bg-white">
           <CardContent className="p-6">
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm text-gray-600 font-medium">Acceptés</p>
-                <p className="text-3xl font-semibold text-green-600 mt-2">{acceptedQuotes}</p>
+                <p className="text-3xl font-bold text-green-600 mt-2">{acceptedQuotes}</p>
               </div>
-              <div className="bg-green-100 p-3 rounded-lg">
+              <div className="p-3 bg-green-100 rounded-lg">
                 <CheckCircle className="h-6 w-6 text-green-600" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-0 shadow-sm">
+        <Card className="border-0 shadow-md hover:shadow-lg transition-shadow bg-white">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm text-gray-600 font-medium">Total Devis</p>
+                <p className="text-3xl font-bold text-blue-600 mt-2">{quotes.length}</p>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <FileText className="h-6 w-6 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-md hover:shadow-lg transition-shadow bg-white">
           <CardContent className="p-6">
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm text-gray-600 font-medium">Valeur totale</p>
-                <p className="text-3xl font-semibold text-gray-900 mt-2">€{(totalValue / 1000).toFixed(0)}k</p>
+                <p className="text-3xl font-bold text-purple-600 mt-2">€{(totalValue / 1000).toFixed(0)}k</p>
               </div>
-              <div className="bg-purple-100 p-3 rounded-lg">
+              <div className="p-3 bg-purple-100 rounded-lg">
                 <DollarSign className="h-6 w-6 text-purple-600" />
               </div>
             </div>
@@ -340,593 +373,246 @@ const Quotes = () => {
         </Card>
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-3 overflow-x-auto">
-        {(['all', 'draft', 'sent', 'accepted', 'rejected', 'expired'] as const).map(status => (
+      {/* Search and View Controls */}
+      <div className="flex flex-col md:flex-row gap-4 mb-8 items-stretch md:items-center">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <Input
+            type="text"
+            placeholder="Rechercher un devis..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 bg-white border-2 border-gray-300 focus:border-blue-500 h-11"
+          />
+        </div>
+        <div className="flex gap-2">
           <button
-            key={status}
-            onClick={() => setFilterStatus(status)}
-            className={`px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
-              filterStatus === status
-                ? 'bg-blue-600 text-white'
-                : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+            onClick={() => setViewMode('grid')}
+            className={`px-4 py-2 rounded-lg transition-all flex items-center gap-2 ${
+              viewMode === 'grid'
+                ? 'bg-blue-600 text-white border-2 border-blue-600'
+                : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
             }`}
+            title="Vue grille"
           >
-            {status === 'all' ? 'Tous' : statusLabels[status as keyof typeof statusLabels]}
+            <Grid3x3 className="h-4 w-4" />
           </button>
-        ))}
+          <button
+            onClick={() => setViewMode('list')}
+            className={`px-4 py-2 rounded-lg transition-all flex items-center gap-2 ${
+              viewMode === 'list'
+                ? 'bg-blue-600 text-white border-2 border-blue-600'
+                : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+            title="Vue liste"
+          >
+            <List className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('kanban')}
+            className={`px-4 py-2 rounded-lg transition-all flex items-center gap-2 ${
+              viewMode === 'kanban'
+                ? 'bg-blue-600 text-white border-2 border-blue-600'
+                : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+            title="Vue kanban"
+          >
+            <Kanban className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
-      {/* Quotes Table */}
-      <Card className="border-0 shadow-sm">
-        <CardHeader>
-          <CardTitle>Liste des devis ({filteredQuotes.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
+      {/* GRID VIEW */}
+      {viewMode === 'grid' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {quotes.map((quote) => (
+            <Card key={quote.id} className="hover:shadow-lg transition-all border-0 bg-white">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">{quote.quoteNumber}</h3>
+                    <p className="text-sm text-gray-500 mt-1">{quote.company}</p>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="p-2 hover:bg-gray-100 rounded-lg">
+                        <MoreVertical className="h-4 w-4 text-gray-500" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>Voir</DropdownMenuItem>
+                      <DropdownMenuItem>Modifier</DropdownMenuItem>
+                      <DropdownMenuItem className="text-red-600">Supprimer</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Contact</span>
+                    <span className="font-medium text-gray-900">{quote.contact}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Montant HT</span>
+                    <span className="font-medium text-gray-900">€{quote.totalAmount.toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Créée le</span>
+                    <span className="font-medium text-gray-900">{new Date(quote.date).toLocaleDateString('fr-FR')}</span>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(quote.status)}`}>
+                      {statusLabels[quote.status as keyof typeof statusLabels]}
+                    </span>
+                    <span className="text-xs text-gray-500">Expire: {new Date(quote.expiryDate).toLocaleDateString('fr-FR')}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* LIST VIEW */}
+      {viewMode === 'list' && (
+        <div className="bg-white rounded-lg shadow-md border-0 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Devis</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Entreprise</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Contact</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Montant TTC</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Expiration</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Statut</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Actions</th>
+              <thead>
+                <tr className="bg-gradient-to-r from-blue-50 to-cyan-50 border-b-2 border-gray-200">
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Devis</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Entreprise</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Contact</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Montant HT</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Date création</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Expiration</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Statut</th>
+                  <th className="px-6 py-4 text-center text-sm font-bold text-gray-900">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredQuotes.map(quote => {
-                  const totalTTC = quote.totalAmount * (1 + quote.taxRate / 100);
-                  const isExpired = new Date(quote.expiryDate) < new Date();
-                  return (
-                    <tr key={quote.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">{quote.quoteNumber}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{quote.company}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{quote.contact}</td>
-                      <td className="px-6 py-4 text-sm font-semibold text-gray-900">€{totalTTC.toLocaleString()}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{new Date(quote.expiryDate).toLocaleDateString('fr-FR')}</td>
-                      <td className="px-6 py-4">
-                        <Badge className={getStatusColor(isExpired && quote.status !== 'accepted' && quote.status !== 'rejected' ? 'expired' : quote.status)}>
-                          <span className="flex items-center gap-1">
-                            {statusIcons[quote.status as keyof typeof statusIcons]}
-                            {statusLabels[quote.status as keyof typeof statusLabels]}
-                          </span>
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => {
-                              setSelectedQuote(quote);
-                              setShowQuotePreview(true);
-                            }}
-                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                            title="Aperçu"
-                          >
-                            <Eye className="h-4 w-4 text-gray-600" />
-                          </button>
-                          {quote.status === 'draft' && (
-                            <button
-                              onClick={() => handleSendQuote(quote.id)}
-                              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                              title="Envoyer"
-                            >
-                              <Send className="h-4 w-4 text-blue-600" />
-                            </button>
-                          )}
-                          {quote.status === 'sent' && (
-                            <button
-                              onClick={() => {
-                                setSelectedQuote(quote);
-                                setShowFollowUp(true);
-                              }}
-                              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                              title="Relance"
-                            >
-                              <Bell className="h-4 w-4 text-orange-600" />
-                            </button>
-                          )}
-                          {quote.status === 'accepted' && (
-                            <button
-                              onClick={() => handleConvertToSignature(quote)}
-                              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                              title="Convertir en signature"
-                            >
-                              <PenTool className="h-4 w-4 text-green-600" />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => {
-                              setSelectedQuote(quote);
-                              setShowCustomization(true);
-                            }}
-                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                            title="Personnaliser"
-                          >
-                            <Edit2 className="h-4 w-4 text-purple-600" />
-                          </button>
-                          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                            <MoreVertical className="h-4 w-4 text-gray-600" />
-                          </button>
+              <tbody>
+                {quotes.map((quote, index) => (
+                  <tr key={quote.id} className={`border-b border-gray-100 hover:bg-blue-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <FileText className="h-4 w-4 text-blue-600" />
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                        <p className="font-semibold text-gray-900">{quote.quoteNumber}</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">{quote.company}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700">{quote.contact}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">€{quote.totalAmount.toLocaleString()}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700">{new Date(quote.date).toLocaleDateString('fr-FR')}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700">{new Date(quote.expiryDate).toLocaleDateString('fr-FR')}</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(quote.status)}`}>
+                        {statusLabels[quote.status as keyof typeof statusLabels]}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <DropdownMenu open={openActionsFor === quote.id} onOpenChange={(open) => setOpenActionsFor(open ? quote.id : null)}>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-2 hover:bg-gray-200 rounded-lg inline-flex">
+                            <MoreVertical className="h-4 w-4 text-gray-500" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>Voir</DropdownMenuItem>
+                          <DropdownMenuItem>Modifier</DropdownMenuItem>
+                          <DropdownMenuItem className="text-red-600">Supprimer</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      )}
 
-      {/* New Quote Dialog */}
-      <Dialog open={showNewQuote} onOpenChange={setShowNewQuote}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Créer un nouveau devis</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-6">
-            {/* Infos Client */}
-            <div className="border-b pb-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Informations du client</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="company" className="text-sm font-medium">Entreprise *</Label>
-                  <Input
-                    id="company"
-                    placeholder="Acme Corp"
-                    value={newQuoteForm.company}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewQuoteForm({...newQuoteForm, company: e.target.value})}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="contact" className="text-sm font-medium">Contact *</Label>
-                  <Input
-                    id="contact"
-                    placeholder="Jean Dupont"
-                    value={newQuoteForm.contact}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewQuoteForm({...newQuoteForm, contact: e.target.value})}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="email" className="text-sm font-medium">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="jean@acme.com"
-                    value={newQuoteForm.email}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewQuoteForm({...newQuoteForm, email: e.target.value})}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="phone" className="text-sm font-medium">Téléphone</Label>
-                  <Input
-                    id="phone"
-                    placeholder="+33 1 23 45 67 89"
-                    value={newQuoteForm.phone}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewQuoteForm({...newQuoteForm, phone: e.target.value})}
-                    className="mt-1"
-                  />
-                </div>
+      {/* KANBAN VIEW */}
+      {viewMode === 'kanban' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          {['draft', 'sent', 'accepted', 'rejected', 'expired'].map((status) => (
+            <div key={status} className="space-y-4">
+              <div className="flex items-center gap-3 p-4 bg-white rounded-lg border-2 border-gray-200 shadow-sm">
+                <div className={`w-3 h-3 rounded-full ${
+                  status === 'draft' ? 'bg-gray-500' :
+                  status === 'sent' ? 'bg-blue-500' :
+                  status === 'accepted' ? 'bg-green-500' :
+                  status === 'rejected' ? 'bg-red-500' :
+                  'bg-orange-500'
+                }`}></div>
+                <h3 className="font-bold text-gray-900">
+                  {statusLabels[status as keyof typeof statusLabels]}
+                </h3>
+                <span className="ml-auto bg-gray-200 text-gray-700 text-xs font-bold px-2 py-1 rounded">
+                  {quotes.filter(c => c.status === status).length}
+                </span>
               </div>
-            </div>
 
-            {/* Articles/Articles */}
-            <div className="border-b pb-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold text-gray-900">Articles *</h3>
-                <button
-                  onClick={() => {
-                    const newId = Math.max(...newQuoteForm.items.map(i => i.id), 0) + 1;
-                    setNewQuoteForm({
-                      ...newQuoteForm,
-                      items: [...newQuoteForm.items, { id: newId, description: '', quantity: 1, unitPrice: 0 }]
-                    });
-                  }}
-                  className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition-colors flex items-center gap-1"
-                >
-                  <Plus className="h-4 w-4" />
-                  Ajouter
-                </button>
-              </div>
-              <div className="space-y-3">
-                {newQuoteForm.items.map((item, index) => (
-                  <div key={item.id} className="grid grid-cols-12 gap-2 items-end bg-gray-50 p-3 rounded-lg">
-                    <div className="col-span-5">
-                      <Label className="text-xs font-medium text-gray-600">Description</Label>
-                      <Input
-                        placeholder="Ex: Licence logiciel"
-                        value={item.description}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                          const newItems = [...newQuoteForm.items];
-                          newItems[index].description = e.target.value;
-                          setNewQuoteForm({...newQuoteForm, items: newItems});
-                        }}
-                        className="mt-1 text-sm"
-                      />
-                    </div>
-                    <div className="col-span-2">
-                      <Label className="text-xs font-medium text-gray-600">Quantité</Label>
-                      <Input
-                        type="number"
-                        min="1"
-                        value={item.quantity}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                          const newItems = [...newQuoteForm.items];
-                          newItems[index].quantity = parseInt(e.target.value) || 1;
-                          setNewQuoteForm({...newQuoteForm, items: newItems});
-                        }}
-                        className="mt-1 text-sm"
-                      />
-                    </div>
-                    <div className="col-span-3">
-                      <Label className="text-xs font-medium text-gray-600">Prix unitaire (€)</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={item.unitPrice}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                          const newItems = [...newQuoteForm.items];
-                          newItems[index].unitPrice = parseFloat(e.target.value) || 0;
-                          setNewQuoteForm({...newQuoteForm, items: newItems});
-                        }}
-                        className="mt-1 text-sm"
-                      />
-                    </div>
-                    <div className="col-span-2 flex items-end justify-between">
-                      <div className="flex-1">
-                        <p className="text-xs font-medium text-gray-600">Total</p>
-                        <p className="font-semibold text-gray-900 text-sm mt-1">
-                          €{(item.quantity * item.unitPrice).toFixed(2)}
-                        </p>
+              <div className="space-y-3 min-h-[400px]">
+                {quotes.filter(c => c.status === status).map((quote) => (
+                  <Card key={quote.id} className="border-2 border-gray-200 shadow-sm hover:shadow-md transition-all bg-white cursor-move">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900 text-sm">{quote.quoteNumber}</h4>
+                          <p className="text-xs text-gray-500 mt-1">{quote.company}</p>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="p-1 hover:bg-gray-100 rounded-lg -mt-1">
+                              <MoreVertical className="h-3 w-3 text-gray-400" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>Voir</DropdownMenuItem>
+                            <DropdownMenuItem>Modifier</DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-600">Supprimer</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
-                      {newQuoteForm.items.length > 1 && (
-                        <button
-                          onClick={() => {
-                            setNewQuoteForm({
-                              ...newQuoteForm,
-                              items: newQuoteForm.items.filter((_, i) => i !== index)
-                            });
-                          }}
-                          className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
+
+                      <div className="space-y-2 border-t border-gray-100 pt-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-600">Contact:</span>
+                          <span className="text-xs font-medium text-gray-900">{quote.contact}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-600">Montant:</span>
+                          <span className="text-xs font-medium text-gray-900">€{quote.totalAmount.toLocaleString()}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-600">Expiration:</span>
+                          <span className="text-xs font-medium text-gray-900">{new Date(quote.expiryDate).toLocaleDateString('fr-FR')}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
+                {quotes.filter(c => c.status === status).length === 0 && (
+                  <p className="text-center text-gray-400 text-sm py-8">Aucun devis</p>
+                )}
               </div>
             </div>
-
-            {/* Montants */}
-            <div className="bg-gray-50 p-4 rounded-lg border">
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Sous-total</span>
-                  <span className="font-semibold">
-                    €{newQuoteForm.items.reduce((sum, i) => sum + (i.quantity * i.unitPrice), 0).toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">TVA</span>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.1"
-                      value={newQuoteForm.taxRate}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewQuoteForm({...newQuoteForm, taxRate: e.target.value})}
-                      className="w-20 text-right"
-                    />
-                    <span className="text-gray-600">%</span>
-                    <span className="font-semibold">
-                      €{((newQuoteForm.items.reduce((sum, i) => sum + (i.quantity * i.unitPrice), 0) * parseInt(newQuoteForm.taxRate)) / 100).toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-                <div className="border-t pt-2 flex justify-between">
-                  <span className="font-bold">Total TTC</span>
-                  <span className="font-bold text-lg text-blue-600">
-                    €{(newQuoteForm.items.reduce((sum, i) => sum + (i.quantity * i.unitPrice), 0) * (1 + parseInt(newQuoteForm.taxRate) / 100)).toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Conditions */}
-            <div className="border-b pb-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Conditions</h3>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="expiryDays" className="text-sm font-medium">Validité (jours)</Label>
-                  <Input
-                    id="expiryDays"
-                    type="number"
-                    placeholder="30"
-                    value={newQuoteForm.expiryDays}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewQuoteForm({...newQuoteForm, expiryDays: e.target.value})}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="notes" className="text-sm font-medium">Notes / Conditions spéciales</Label>
-                  <textarea
-                    id="notes"
-                    placeholder="Ex: Paiement à 30 jours net, Délai de livraison 2 semaines..."
-                    value={newQuoteForm.notes}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNewQuoteForm({...newQuoteForm, notes: e.target.value})}
-                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    rows={3}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Boutons */}
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setShowNewQuote(false)} className="flex-1">
-                Annuler
-              </Button>
-              <Button onClick={handleCreateQuote} className="flex-1 bg-blue-600 hover:bg-blue-700">
-                Créer le devis
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Quote Preview Dialog */}
-      {selectedQuote && (
-        <Dialog open={showQuotePreview} onOpenChange={setShowQuotePreview}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Aperçu du devis {selectedQuote.quoteNumber}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-6 max-h-96 overflow-y-auto">
-              {/* Header */}
-              <div className="bg-gray-50 p-4 rounded-lg border-l-4" style={{borderLeftColor: selectedQuote.customization.colors}}>
-                <h3 className="font-semibold text-gray-900">{selectedQuote.company}</h3>
-                <p className="text-sm text-gray-600">{selectedQuote.contact}</p>
-              </div>
-
-              {/* Quote Details */}
-              <div className="grid grid-cols-3 gap-4 text-sm">
-                <div>
-                  <p className="text-gray-600 font-medium">Devis #</p>
-                  <p className="text-gray-900 font-semibold">{selectedQuote.quoteNumber}</p>
-                </div>
-                <div>
-                  <p className="text-gray-600 font-medium">Date</p>
-                  <p className="text-gray-900">{new Date(selectedQuote.date).toLocaleDateString('fr-FR')}</p>
-                </div>
-                <div>
-                  <p className="text-gray-600 font-medium">Expiration</p>
-                  <p className="text-gray-900">{new Date(selectedQuote.expiryDate).toLocaleDateString('fr-FR')}</p>
-                </div>
-              </div>
-
-              {/* Items */}
-              <div className="border rounded-lg overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-100">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-gray-700">Description</th>
-                      <th className="px-4 py-2 text-center text-gray-700">Qté</th>
-                      <th className="px-4 py-2 text-right text-gray-700">Prix</th>
-                      <th className="px-4 py-2 text-right text-gray-700">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedQuote.items.map(item => (
-                      <tr key={item.id} className="border-t">
-                        <td className="px-4 py-2">{item.description}</td>
-                        <td className="px-4 py-2 text-center">{item.quantity}</td>
-                        <td className="px-4 py-2 text-right">€{item.unitPrice.toLocaleString()}</td>
-                        <td className="px-4 py-2 text-right">€{item.total.toLocaleString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Totals */}
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>Sous-total</span>
-                  <span className="font-semibold">€{selectedQuote.totalAmount.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-gray-600">
-                  <span>TVA ({selectedQuote.taxRate}%)</span>
-                  <span>€{((selectedQuote.totalAmount * selectedQuote.taxRate) / 100).toLocaleString()}</span>
-                </div>
-                <div className="border-t pt-2 flex justify-between font-bold text-base">
-                  <span>Total TTC</span>
-                  <span style={{color: selectedQuote.customization.colors}}>
-                    €{(selectedQuote.totalAmount * (1 + selectedQuote.taxRate / 100)).toLocaleString()}
-                  </span>
-                </div>
-              </div>
-
-              {/* Terms */}
-              <div className="bg-gray-50 p-4 rounded-lg text-sm">
-                <p className="text-gray-600 font-medium mb-2">Conditions de paiement</p>
-                <p className="text-gray-700">{selectedQuote.customization.terms}</p>
-              </div>
-
-              {selectedQuote.notes && (
-                <div className="bg-blue-50 p-4 rounded-lg text-sm">
-                  <p className="text-gray-600 font-medium mb-2">Notes</p>
-                  <p className="text-gray-700">{selectedQuote.notes}</p>
-                </div>
-              )}
-            </div>
-            <div className="flex gap-3 pt-4">
-              <Button variant="outline" onClick={() => setShowQuotePreview(false)} className="flex-1">
-                Fermer
-              </Button>
-              <Button className="flex-1 bg-blue-600 hover:bg-blue-700 flex items-center gap-2">
-                <Download className="h-4 w-4" />
-                Télécharger PDF
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+          ))}
+        </div>
       )}
 
-      {/* Customization Dialog */}
-      {selectedQuote && (
-        <Dialog open={showCustomization} onOpenChange={setShowCustomization}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Personnaliser le devis</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="colors" className="text-sm font-medium">Couleur principale</Label>
-                <div className="mt-2 flex gap-2">
-                  {['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444'].map(color => (
-                    <button
-                      key={color}
-                      onClick={() => setCustomForm({...customForm, colors: color})}
-                      className={`w-10 h-10 rounded-lg border-2 transition-all ${
-                        customForm.colors === color ? 'border-gray-800' : 'border-gray-200'
-                      }`}
-                      style={{backgroundColor: color}}
-                    />
-                  ))}
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="terms" className="text-sm font-medium">Conditions de paiement</Label>
-                <textarea
-                  id="terms"
-                  placeholder="Ex: Paiement à 30 jours net"
-                  value={customForm.terms}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setCustomForm({...customForm, terms: e.target.value})}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={3}
-                />
-              </div>
-              <div className="flex gap-3 pt-4">
-                <Button variant="outline" onClick={() => setShowCustomization(false)} className="flex-1">
-                  Annuler
-                </Button>
-                <Button onClick={handleApplyCustomization} className="flex-1 bg-blue-600 hover:bg-blue-700">
-                  Appliquer
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Follow-up Dialog */}
-      {selectedQuote && (
-        <Dialog open={showFollowUp} onOpenChange={setShowFollowUp}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Relance - {selectedQuote.quoteNumber}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="bg-blue-50 p-4 rounded-lg text-sm">
-                <p className="text-gray-600 font-medium">Devis envoyé à:</p>
-                <p className="text-gray-900 font-semibold mt-1">{selectedQuote.company} - {selectedQuote.contact}</p>
-              </div>
-              <div>
-                <Label htmlFor="date" className="text-sm font-medium">Date de relance</Label>
-                <Input
-                  id="date"
-                  type="date"
-                  value={followUpForm.date}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFollowUpForm({...followUpForm, date: e.target.value})}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="message" className="text-sm font-medium">Message de relance</Label>
-                <textarea
-                  id="message"
-                  placeholder="Bonjour, vous trouverez ci-joint le devis..."
-                  value={followUpForm.message}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFollowUpForm({...followUpForm, message: e.target.value})}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={4}
-                />
-              </div>
-              <div className="flex gap-3 pt-4">
-                <Button variant="outline" onClick={() => setShowFollowUp(false)} className="flex-1">
-                  Annuler
-                </Button>
-                <Button onClick={handleSendFollowUp} className="flex-1 bg-orange-600 hover:bg-orange-700">
-                  Envoyer relance
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Convert to Signature Dialog */}
-      {selectedQuote && (
-        <Dialog open={showConvertToSignature} onOpenChange={setShowConvertToSignature}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Convertir en signature</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="bg-green-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-600 font-medium">Dévis accepté</p>
-                <p className="text-gray-900 font-semibold mt-1">{selectedQuote.quoteNumber}</p>
-              </div>
-              <div className="border rounded-lg p-4 bg-gray-50 space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="mt-1">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">Créer un contrat de signature</p>
-                    <p className="text-sm text-gray-600">Le devis sera converti en document signable</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="mt-1">
-                    <PenTool className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">Signature électronique</p>
-                    <p className="text-sm text-gray-600">Client et prestataire signent en ligne</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="mt-1">
-                    <FileText className="h-5 w-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">Contrat validé</p>
-                    <p className="text-sm text-gray-600">Archivage automatique dans les documents</p>
-                  </div>
-                </div>
-              </div>
-              <div className="flex gap-3 pt-4">
-                <Button variant="outline" onClick={() => setShowConvertToSignature(false)} className="flex-1">
-                  Annuler
-                </Button>
-                <Button className="flex-1 bg-green-600 hover:bg-green-700 flex items-center gap-2">
-                  <ArrowRight className="h-4 w-4" />
-                  Convertir en signature
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+      {quotes.length === 0 && (
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-12 text-center">
+            <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500">Aucun devis trouvé</p>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

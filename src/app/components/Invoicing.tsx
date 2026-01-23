@@ -17,7 +17,11 @@ import {
   Building2,
   CheckCircle,
   XCircle,
-  Clock
+  Clock,
+  Grid3x3,
+  List,
+  Kanban,
+  MoreVertical
 } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
@@ -34,6 +38,7 @@ interface Invoice {
 
 const Invoicing = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'kanban'>('list')
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   const invoices: Invoice[] = [
@@ -428,122 +433,250 @@ const Invoicing = () => {
         </Card>
       </div>
 
-      {/* Search */}
+      {/* Search and View Mode */}
       <Card className="border-0 shadow-sm">
         <CardContent className="p-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Rechercher une facture par numéro ou client..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Invoices Table */}
-      <Card className="border-0 shadow-sm">
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Facture
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Client
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Montant
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date d'émission
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date d'échéance
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Statut
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredInvoices.map((invoice) => (
-                  <tr key={invoice.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-blue-100 p-2 rounded-lg">
-                          <FileText className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">{invoice.number}</p>
-                          <p className="text-sm text-gray-500">{invoice.items} articles</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4 text-gray-400" />
-                        <span className="text-sm text-gray-900">{invoice.company}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="text-sm font-semibold text-gray-900">
-                        €{invoice.amount.toLocaleString()}
-                      </p>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Calendar className="h-3 w-3" />
-                        <span>{new Date(invoice.issueDate).toLocaleDateString('fr-FR')}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Calendar className="h-3 w-3" />
-                        <span>{new Date(invoice.dueDate).toLocaleDateString('fr-FR')}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <Badge className={`${getStatusColor(invoice.status)} flex items-center gap-1 w-fit`}>
-                        {getStatusIcon(invoice.status)}
-                        {getStatusLabel(invoice.status)}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Voir">
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        <button className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Envoyer">
-                          <Send className="h-4 w-4" />
-                        </button>
-                        <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" title="Télécharger">
-                          <Download className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {filteredInvoices.length === 0 && (
-            <div className="p-12 text-center">
-              <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">Aucune facture trouvée</p>
+          <div className="flex justify-between items-center gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Rechercher une facture par numéro ou client..."
+                value={searchQuery}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
             </div>
-          )}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-lg transition-colors ${
+                  viewMode === 'grid'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                }`}
+                title="Vue grille"
+              >
+                <Grid3x3 className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-lg transition-colors ${
+                  viewMode === 'list'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                }`}
+                title="Vue liste"
+              >
+                <List className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setViewMode('kanban')}
+                className={`p-2 rounded-lg transition-colors ${
+                  viewMode === 'kanban'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                }`}
+                title="Vue kanban"
+              >
+                <Kanban className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
         </CardContent>
       </Card>
+
+      {/* View Mode: Grid */}
+      {viewMode === 'grid' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredInvoices.map((invoice) => (
+            <Card key={invoice.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-blue-100 p-2 rounded-lg">
+                      <FileText className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">{invoice.number}</p>
+                      <p className="text-xs text-gray-500">{invoice.items} articles</p>
+                    </div>
+                  </div>
+                  <Badge className={`${getStatusColor(invoice.status)}`}>
+                    {getStatusLabel(invoice.status)}
+                  </Badge>
+                </div>
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Building2 className="h-4 w-4" />
+                    <span>{invoice.company}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <DollarSign className="h-4 w-4" />
+                    <span className="font-semibold text-gray-900">€{invoice.amount.toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Calendar className="h-4 w-4" />
+                    <span>{new Date(invoice.dueDate).toLocaleDateString('fr-FR')}</span>
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-4 border-t">
+                  <button className="flex-1 flex items-center justify-center gap-1 p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-sm">
+                    <Eye className="h-4 w-4" />
+                    Voir
+                  </button>
+                  <button className="flex-1 flex items-center justify-center gap-1 p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors text-sm">
+                    <Send className="h-4 w-4" />
+                    Envoyer
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* View Mode: List */}
+      {viewMode === 'list' && (
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Facture
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Client
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Montant
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date d'émission
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date d'échéance
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Statut
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredInvoices.map((invoice) => (
+                    <tr key={invoice.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-blue-100 p-2 rounded-lg">
+                            <FileText className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{invoice.number}</p>
+                            <p className="text-sm text-gray-500">{invoice.items} articles</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4 text-gray-400" />
+                          <span className="text-sm text-gray-900">{invoice.company}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <p className="text-sm font-semibold text-gray-900">
+                          €{invoice.amount.toLocaleString()}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <Calendar className="h-3 w-3" />
+                          <span>{new Date(invoice.issueDate).toLocaleDateString('fr-FR')}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <Calendar className="h-3 w-3" />
+                          <span>{new Date(invoice.dueDate).toLocaleDateString('fr-FR')}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <Badge className={`${getStatusColor(invoice.status)} flex items-center gap-1 w-fit`}>
+                          {getStatusIcon(invoice.status)}
+                          {getStatusLabel(invoice.status)}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Voir">
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Envoyer">
+                            <Send className="h-4 w-4" />
+                          </button>
+                          <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" title="Télécharger">
+                            <Download className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {filteredInvoices.length === 0 && (
+              <div className="p-12 text-center">
+                <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">Aucune facture trouvée</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* View Mode: Kanban */}
+      {viewMode === 'kanban' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {['draft', 'pending', 'overdue', 'paid'].map((status) => {
+            const statusInvoices = filteredInvoices.filter(i => i.status === status as any);
+            return (
+              <div key={status} className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className={`h-3 w-3 rounded-full ${status === 'draft' ? 'bg-gray-400' : status === 'pending' ? 'bg-orange-400' : status === 'overdue' ? 'bg-red-400' : 'bg-green-400'}`}></div>
+                  <h3 className="font-semibold text-gray-900">
+                    {status === 'draft' ? 'Brouillons' : status === 'pending' ? 'En attente' : status === 'overdue' ? 'En retard' : 'Payées'}
+                  </h3>
+                  <span className="ml-auto bg-white px-2 py-1 rounded text-xs font-medium text-gray-600">
+                    {statusInvoices.length}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {statusInvoices.map((invoice) => (
+                    <Card key={invoice.id} className="border-0 shadow-sm bg-white cursor-move hover:shadow-md transition-shadow">
+                      <CardContent className="p-3">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <p className="text-sm font-medium text-gray-900 truncate">{invoice.number}</p>
+                          <FileText className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                        </div>
+                        <p className="text-xs text-gray-600 mb-2">{invoice.company}</p>
+                        <div className="pt-2 border-t border-gray-100">
+                          <p className="text-sm font-semibold text-gray-900">€{invoice.amount.toLocaleString()}</p>
+                          <p className="text-xs text-gray-500">{new Date(invoice.dueDate).toLocaleDateString('fr-FR')}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

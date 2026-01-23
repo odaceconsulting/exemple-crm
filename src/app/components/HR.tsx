@@ -20,7 +20,10 @@ import {
   MapPin,
   Zap,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Grid3x3,
+  List,
+  Kanban
 } from 'lucide-react';
 
 interface Employee {
@@ -39,6 +42,7 @@ interface Employee {
 
 const HR = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'kanban'>('grid');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [showEmployeeCard, setShowEmployeeCard] = useState(false);
@@ -371,26 +375,64 @@ const HR = () => {
         </CardContent>
       </Card>
 
-      {/* Search */}
+      {/* Search and View Mode */}
       <Card className="border-0 shadow-sm">
         <CardContent className="p-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Rechercher un collaborateur par nom, poste ou département..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex justify-between items-center gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Rechercher un collaborateur par nom, poste ou département..."
+                value={searchQuery}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-lg transition-colors ${
+                  viewMode === 'grid'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                }`}
+                title="Vue grille"
+              >
+                <Grid3x3 className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-lg transition-colors ${
+                  viewMode === 'list'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                }`}
+                title="Vue liste"
+              >
+                <List className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setViewMode('kanban')}
+                className={`p-2 rounded-lg transition-colors ${
+                  viewMode === 'kanban'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                }`}
+                title="Vue kanban"
+              >
+                <Kanban className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Employees Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredEmployees.map((employee) => (
-          <Card key={employee.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+      {/* Employees Grid View */}
+      {viewMode === 'grid' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredEmployees.map((employee) => (
+            <Card key={employee.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-start gap-4 mb-4">
                 <Avatar className="h-16 w-16">
@@ -474,14 +516,166 @@ const HR = () => {
           </Card>
         ))}
       </div>
+      )}
 
-      {filteredEmployees.length === 0 && (
+      {/* Employees List View */}
+      {viewMode === 'list' && (
         <Card className="border-0 shadow-sm">
-          <CardContent className="p-12 text-center">
-            <UserSquare2 className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">Aucun collaborateur trouvé</p>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Collaborateur</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Poste</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Département</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Téléphone</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disponibilité</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredEmployees.map((employee) => (
+                    <tr key={employee.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback className="bg-blue-100 text-blue-600 text-xs font-medium">
+                              {getInitials(employee.firstName, employee.lastName)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm font-medium text-gray-900">{employee.firstName} {employee.lastName}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{employee.position}</td>
+                      <td className="px-6 py-4 whitespace-nowrap"><Badge variant="outline">{employee.department}</Badge></td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">{employee.email}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{employee.phone}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`text-sm font-medium ${getAvailabilityColor(employee.availability)}`}>
+                          {employee.availability}%
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <Badge className={getStatusColor(employee.status)}>
+                          {getStatusLabel(employee.status)}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button 
+                          onClick={() => {
+                            setSelectedEmployee(employee);
+                            setShowEmployeeCard(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                          Voir
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {filteredEmployees.length === 0 && (
+              <div className="p-12 text-center">
+                <UserSquare2 className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">Aucun collaborateur trouvé</p>
+              </div>
+            )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Employees Kanban View */}
+      {viewMode === 'kanban' && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {['active', 'on-leave', 'inactive'].map((status) => {
+            const statusEmployees = filteredEmployees.filter(e => e.status === status as any);
+            const statusLabels = {
+              active: 'Actifs',
+              'on-leave': 'En Congé',
+              inactive: 'Inactifs'
+            };
+            const statusColors = {
+              active: 'bg-green-50 border-green-200',
+              'on-leave': 'bg-orange-50 border-orange-200',
+              inactive: 'bg-gray-50 border-gray-200'
+            };
+            const iconColors = {
+              active: 'text-green-600',
+              'on-leave': 'text-orange-600',
+              inactive: 'text-gray-600'
+            };
+
+            return (
+              <div key={status} className={`${statusColors[status as keyof typeof statusColors]} border-2 rounded-lg p-4`}>
+                <div className="flex items-center gap-2 mb-4">
+                  {status === 'active' && <CheckCircle className={`h-5 w-5 ${iconColors[status]}`} />}
+                  {status === 'on-leave' && <Clock className={`h-5 w-5 ${iconColors[status]}`} />}
+                  {status === 'inactive' && <AlertCircle className={`h-5 w-5 ${iconColors[status]}`} />}
+                  <h3 className="font-bold text-gray-900">
+                    {statusLabels[status as keyof typeof statusLabels]}
+                  </h3>
+                  <span className="ml-auto bg-white px-2 py-1 rounded text-xs font-bold text-gray-700">
+                    {statusEmployees.length}
+                  </span>
+                </div>
+                <div className="space-y-3">
+                  {statusEmployees.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500 text-sm">
+                      Aucun collaborateur
+                    </div>
+                  ) : (
+                    statusEmployees.map((employee) => (
+                      <Card key={employee.id} className="border-0 shadow-sm hover:shadow-md transition-shadow bg-white cursor-move">
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3 mb-3">
+                            <Avatar className="h-10 w-10 flex-shrink-0">
+                              <AvatarFallback className="bg-blue-100 text-blue-600 text-xs font-medium">
+                                {getInitials(employee.firstName, employee.lastName)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-gray-900 text-sm">
+                                {employee.firstName} {employee.lastName}
+                              </p>
+                              <p className="text-xs text-gray-600 mt-1">{employee.position}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-1 py-2 border-t border-b border-gray-200 text-xs">
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Département:</span>
+                              <span className="font-medium text-gray-900">{employee.department}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Disponibilité:</span>
+                              <span className={`font-medium ${getAvailabilityColor(employee.availability)}`}>
+                                {employee.availability}%
+                              </span>
+                            </div>
+                          </div>
+
+                          <button 
+                            onClick={() => {
+                              setSelectedEmployee(employee);
+                              setShowEmployeeCard(true);
+                            }}
+                            className="w-full mt-3 p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-sm font-medium">
+                            Voir fiche
+                          </button>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
 
         {/* Employee Card Dialog */}

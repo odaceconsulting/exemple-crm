@@ -31,6 +31,7 @@ import {
   Zap,
   Grid3x3,
   List,
+  Kanban,
   MoreVertical,
   Copy,
   Archive,
@@ -49,7 +50,7 @@ const Documents = () => {
   const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
   const [isAccessControlOpen, setIsAccessControlOpen] = useState(false);
   const [isApprovalWorkflowOpen, setIsApprovalWorkflowOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'kanban'>('grid');
   const [activeTab, setActiveTab] = useState('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -511,6 +512,16 @@ const Documents = () => {
           >
             <List className="h-4 w-4" />
           </button>
+          <button
+            onClick={() => setViewMode('kanban')}
+            className={`px-4 py-2 rounded-lg transition-all flex items-center gap-2 ${
+              viewMode === 'kanban'
+                ? 'bg-blue-600 text-white border-2 border-blue-600'
+                : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <Kanban className="h-4 w-4" />
+          </button>
         </div>
       </div>
 
@@ -704,6 +715,111 @@ const Documents = () => {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Documents Display - Kanban View */}
+      {viewMode === 'kanban' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {['approved', 'pending', 'rejected'].map((status) => {
+            const statusDocuments = filteredDocuments.filter(d => d.status === status);
+            const statusLabels = {
+              approved: 'Approuvés',
+              pending: 'En Attente',
+              rejected: 'Rejetés'
+            };
+            const statusColors = {
+              approved: 'bg-emerald-50 border-emerald-200',
+              pending: 'bg-amber-50 border-amber-200',
+              rejected: 'bg-red-50 border-red-200'
+            };
+            const iconColors = {
+              approved: 'text-emerald-600',
+              pending: 'text-amber-600',
+              rejected: 'text-red-600'
+            };
+
+            return (
+              <div key={status} className={`${statusColors[status as keyof typeof statusColors]} border-2 rounded-lg p-4`}>
+                <div className="flex items-center gap-2 mb-4">
+                  {status === 'approved' && <CheckCircle className={`h-5 w-5 ${iconColors[status]}`} />}
+                  {status === 'pending' && <Clock className={`h-5 w-5 ${iconColors[status]}`} />}
+                  {status === 'rejected' && <AlertCircle className={`h-5 w-5 ${iconColors[status]}`} />}
+                  <h3 className="font-bold text-gray-900">
+                    {statusLabels[status as keyof typeof statusLabels]}
+                  </h3>
+                  <span className="ml-auto bg-white px-2 py-1 rounded text-xs font-bold text-gray-700">
+                    {statusDocuments.length}
+                  </span>
+                </div>
+                <div className="space-y-3">
+                  {statusDocuments.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500 text-sm">
+                      Aucun document
+                    </div>
+                  ) : (
+                    statusDocuments.map((doc) => (
+                      <Card key={doc.id} className="border-0 shadow-sm hover:shadow-md transition-shadow bg-white cursor-move">
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3 mb-3">
+                            <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                              {getFileIcon(doc.type)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-gray-900 text-sm line-clamp-2">{doc.name}</p>
+                              <p className="text-xs text-gray-500 mt-1">{doc.size}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2 py-3 border-t border-b border-gray-200">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-gray-600">Catégorie:</span>
+                              <Badge className="bg-blue-50 text-blue-700 border-blue-200 text-xs">{doc.category}</Badge>
+                            </div>
+                            {doc.company && (
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-gray-600">Entreprise:</span>
+                                <span className="font-medium text-gray-900">{doc.company}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-gray-600">Date:</span>
+                              <span className="text-gray-900">{new Date(doc.uploadDate).toLocaleDateString('fr-FR')}</span>
+                            </div>
+                          </div>
+
+                          {doc.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-3">
+                              {doc.tags.slice(0, 1).map((tag, index) => (
+                                <Badge key={index} className="bg-indigo-50 text-indigo-700 border-indigo-200 text-xs">
+                                  {tag}
+                                </Badge>
+                              ))}
+                              {doc.tags.length > 1 && (
+                                <Badge className="bg-gray-100 text-gray-700 text-xs">+{doc.tags.length - 1}</Badge>
+                              )}
+                            </div>
+                          )}
+
+                          <div className="flex gap-2 pt-3 mt-3 border-t">
+                            <button className="flex-1 p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-xs font-medium" title="Télécharger">
+                              <Download className="h-4 w-4 mx-auto" />
+                            </button>
+                            <button className="flex-1 p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors text-xs font-medium" title="Voir">
+                              <Eye className="h-4 w-4 mx-auto" />
+                            </button>
+                            <button className="flex-1 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-xs font-medium" title="Supprimer">
+                              <Trash2 className="h-4 w-4 mx-auto" />
+                            </button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
 
       {/* Advanced GED Features Section */}

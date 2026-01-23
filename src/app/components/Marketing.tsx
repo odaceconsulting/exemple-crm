@@ -18,7 +18,10 @@ import {
   MessageSquare,
   Share2,
   BarChart3,
-  Target
+  Target,
+  Grid3x3,
+  List,
+  Kanban
 } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
@@ -39,6 +42,7 @@ interface Campaign {
 
 const Marketing = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'kanban'>('grid');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [showCampaignDialog, setShowCampaignDialog] = useState(false);
@@ -484,26 +488,61 @@ const Marketing = () => {
         </CardContent>
       </Card>
 
-      {/* Search */}
+      {/* Search and View Toggle */}
       <Card className="border-0 shadow-sm">
         <CardContent className="p-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Rechercher une campagne..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex items-center gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Rechercher une campagne..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-3 rounded-lg transition-all ${
+                  viewMode === 'grid'
+                    ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+                title="Vue Grille">
+                <Grid3x3 className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-3 rounded-lg transition-all ${
+                  viewMode === 'list'
+                    ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+                title="Vue Liste">
+                <List className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setViewMode('kanban')}
+                className={`p-3 rounded-lg transition-all ${
+                  viewMode === 'kanban'
+                    ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+                title="Vue Kanban">
+                <Kanban className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Campaigns Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredCampaigns.map((campaign) => (
-          <Card key={campaign.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+      {/* Campaigns Grid View */}
+      {viewMode === 'grid' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredCampaigns.map((campaign) => (
+            <Card key={campaign.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
             <CardHeader className="pb-3">
               <div className="flex justify-between items-start">
                 <div>
@@ -600,15 +639,193 @@ const Marketing = () => {
             </CardContent>
           </Card>
         ))}
-      </div>
-
-      {filteredCampaigns.length === 0 && (
+        </div>
+      )}
+      {viewMode === 'list' && (
         <Card className="border-0 shadow-sm">
-          <CardContent className="p-12 text-center">
-            <Mail className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">Aucune campagne trouvée</p>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campagne</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Portée</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conversions</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ROI</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredCampaigns.map((campaign) => (
+                    <tr key={campaign.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <div className={`${getTypeColor(campaign.type)} p-2 rounded-lg`}>
+                            {getTypeIcon(campaign.type)}
+                          </div>
+                          <span className="text-sm font-medium text-gray-900">{campaign.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {campaign.type === 'email' && 'Email'}
+                        {campaign.type === 'social' && 'Réseaux Sociaux'}
+                        {campaign.type === 'sms' && 'SMS'}
+                        {campaign.type === 'whatsapp' && 'WhatsApp'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <Badge className={getStatusColor(campaign.status)}>
+                          {getStatusLabel(campaign.status)}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        €{campaign.spent.toLocaleString()} / €{campaign.budget.toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {campaign.reach > 0 ? `${(campaign.reach / 1000).toFixed(0)}K` : '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {campaign.conversions}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`text-sm font-semibold ${campaign.roi > 0 ? 'text-green-600' : 'text-gray-600'}`}>
+                          {campaign.roi > 0 ? `${campaign.roi}%` : '-'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <button 
+                          onClick={() => {
+                            setSelectedCampaign(campaign);
+                            setShowCampaignDialog(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-700 font-medium">
+                          Voir
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {filteredCampaigns.length === 0 && (
+              <div className="p-12 text-center">
+                <Mail className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">Aucune campagne trouvée</p>
+              </div>
+            )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Campaigns Kanban View */}
+      {viewMode === 'kanban' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {['draft', 'scheduled', 'active', 'completed'].map((status) => {
+            const statusCampaigns = filteredCampaigns.filter(c => c.status === status as any);
+            const statusLabels = {
+              draft: 'Brouillons',
+              scheduled: 'Programmées',
+              active: 'Actives',
+              completed: 'Complétées'
+            };
+            const statusColors = {
+              draft: 'bg-gray-50 border-gray-200',
+              scheduled: 'bg-blue-50 border-blue-200',
+              active: 'bg-green-50 border-green-200',
+              completed: 'bg-purple-50 border-purple-200'
+            };
+            const iconColors = {
+              draft: 'text-gray-600',
+              scheduled: 'text-blue-600',
+              active: 'text-green-600',
+              completed: 'text-purple-600'
+            };
+
+            return (
+              <div key={status} className={`${statusColors[status as keyof typeof statusColors]} border-2 rounded-lg p-4`}>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className={`h-3 w-3 rounded-full ${iconColors[status as keyof typeof iconColors]}`}></div>
+                  <h3 className="font-bold text-gray-900">
+                    {statusLabels[status as keyof typeof statusLabels]}
+                  </h3>
+                  <span className="ml-auto bg-white px-2 py-1 rounded text-xs font-bold text-gray-700">
+                    {statusCampaigns.length}
+                  </span>
+                </div>
+                <div className="space-y-3">
+                  {statusCampaigns.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500 text-sm">
+                      Aucune campagne
+                    </div>
+                  ) : (
+                    statusCampaigns.map((campaign) => (
+                      <Card key={campaign.id} className="border-0 shadow-sm hover:shadow-md transition-shadow bg-white cursor-move">
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3 mb-3">
+                            <div className={`${getTypeColor(campaign.type)} p-2 rounded-lg flex-shrink-0`}>
+                              {getTypeIcon(campaign.type)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-gray-900 text-sm line-clamp-2">
+                                {campaign.name}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2 py-2 border-t border-gray-200 text-xs">
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Portée:</span>
+                              <span className="font-medium text-gray-900">
+                                {campaign.reach > 0 ? `${(campaign.reach / 1000).toFixed(0)}K` : '-'}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Conversions:</span>
+                              <span className="font-medium text-gray-900">{campaign.conversions}</span>
+                            </div>
+                            {campaign.roi > 0 && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">ROI:</span>
+                                <span className="font-medium text-green-600">{campaign.roi}%</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="mt-3 space-y-2 text-xs">
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Budget:</span>
+                              <span className="font-medium text-gray-900">
+                                €{campaign.spent.toLocaleString()} / €{campaign.budget.toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-1.5">
+                              <div
+                                className="bg-blue-600 h-1.5 rounded-full transition-all"
+                                style={{ width: `${campaign.budget > 0 ? (campaign.spent / campaign.budget) * 100 : 0}%` }}
+                              ></div>
+                            </div>
+                          </div>
+
+                          <button 
+                            onClick={() => {
+                              setSelectedCampaign(campaign);
+                              setShowCampaignDialog(true);
+                            }}
+                            className="w-full mt-3 p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-xs font-medium">
+                            Voir détails
+                          </button>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
 
         {/* Campaign Details Dialog */}
