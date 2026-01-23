@@ -251,16 +251,31 @@ export default function App() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto flex flex-col w-full">
-        {/* Top Bar */}
-        <div className="h-14 md:h-16 bg-white border-b border-gray-200 px-3 md:px-6 flex items-center justify-between sticky top-0 z-30">
-          <div className="flex items-center gap-2 md:gap-4 flex-1">
+        {/* Top Bar - Improved */}
+        <div className="h-16 bg-white border-b border-gray-200 px-4 md:px-8 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+          <div className="flex items-center gap-3 md:gap-6 flex-1 min-w-0">
+            {/* Mobile Menu Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+              className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+              title="Menu"
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
-            <div className="hidden md:flex flex-1 max-w-md min-w-0">
+
+            {/* Logo and Company Name */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="h-9 w-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                <Building2 className="h-5 w-5 text-white font-bold" />
+              </div>
+              <div className="hidden sm:block">
+                <p className="text-sm font-bold text-gray-900">CRM Pro</p>
+                <p className="text-xs text-gray-500">Gestion de Relation Client</p>
+              </div>
+            </div>
+
+            {/* Search Bar - Desktop only */}
+            <div className="hidden md:flex flex-1 max-w-lg">
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
@@ -268,35 +283,39 @@ export default function App() {
                   placeholder="Rechercher..."
                   value={searchQuery}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-                  className="pl-9 bg-gray-50 border border-gray-200 text-sm"
+                  className="pl-9 bg-gray-50 border border-gray-200 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
             </div>
           </div>
 
-          {/* User Menu */}
-          <div className="flex items-center gap-3 md:gap-6">
+          {/* User Menu - Icons */}
+          <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
+            {/* Notifications */}
             <Dialog open={notificationsOpen} onOpenChange={setNotificationsOpen}>
               <DialogTrigger asChild>
-                <button className="p-1.5 md:p-2 relative hover:bg-gray-100 rounded-lg transition-colors">
-                  <Bell className="h-4 md:h-5 w-4 md:w-5 text-gray-600" />
-                  <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full" />
+                <button className="p-2 hover:bg-blue-50 rounded-lg transition-colors relative group" title="Notifications">
+                  <Bell className="h-5 w-5 text-gray-600 group-hover:text-blue-600" />
+                  <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-red-500 rounded-full shadow-sm animate-pulse" />
                 </button>
               </DialogTrigger>
               <DialogContent className="max-w-md">
                 <DialogHeader>
-                  <DialogTitle>Notifications</DialogTitle>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Bell className="h-5 w-5 text-blue-600" />
+                    Notifications
+                  </DialogTitle>
                 </DialogHeader>
-                <div className="space-y-3 max-h-96 overflow-y-auto">
+                <div className="space-y-2 max-h-96 overflow-y-auto">
                   {notifications.map((notif) => (
-                    <div key={notif.id} className={`p-3 rounded-lg border ${notif.read ? 'border-gray-200 bg-gray-50' : 'border-blue-200 bg-blue-50'}`}>
+                    <div key={notif.id} className={`p-4 rounded-lg border-l-4 transition-all ${notif.read ? 'border-l-gray-200 bg-gray-50' : 'border-l-blue-600 bg-blue-50'}`}>
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm text-gray-900">{notif.title}</p>
-                          <p className="text-xs text-gray-600 mt-1 line-clamp-2">{notif.message}</p>
+                          <p className="font-semibold text-sm text-gray-900">{notif.title}</p>
+                          <p className="text-sm text-gray-600 mt-1 line-clamp-2">{notif.message}</p>
                           <p className="text-xs text-gray-500 mt-2">{notif.time}</p>
                         </div>
-                        {!notif.read && <div className="h-2 w-2 bg-blue-600 rounded-full mt-1 flex-shrink-0" />}
+                        {!notif.read && <div className="h-2.5 w-2.5 bg-blue-600 rounded-full mt-1 flex-shrink-0" />}
                       </div>
                     </div>
                   ))}
@@ -304,117 +323,129 @@ export default function App() {
               </DialogContent>
             </Dialog>
 
+            {/* Profile */}
             <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
               <DialogTrigger asChild>
-                <button className="p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors hidden sm:block">
-                  <User className="h-4 md:h-5 w-4 md:w-5 text-gray-600" />
+                <button className="p-2 hover:bg-blue-50 rounded-lg transition-colors group" title="Profil">
+                  <div className="h-8 w-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-sm">
+                    <span className="text-white font-semibold text-xs">
+                      {profileData.firstName[0]}{profileData.lastName[0]}
+                    </span>
+                  </div>
                 </button>
               </DialogTrigger>
               <DialogContent className="max-w-md">
                 <DialogHeader>
-                  <DialogTitle>Mon Profil</DialogTitle>
+                  <DialogTitle className="flex items-center gap-2">
+                    <div className="h-10 w-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+                      <span className="text-white font-bold">
+                        {profileData.firstName[0]}{profileData.lastName[0]}
+                      </span>
+                    </div>
+                    Mon Profil
+                  </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
-                  <Card className="bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200">
+                  <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 shadow-sm">
                     <CardContent className="p-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
-                          {editProfileData.firstName[0]}{editProfileData.lastName[0]}
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="h-12 w-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                          <span className="text-white font-bold text-lg">
+                            {profileData.firstName[0]}{profileData.lastName[0]}
+                          </span>
                         </div>
                         <div>
-                          <p className="font-bold text-gray-900">{editProfileData.firstName} {editProfileData.lastName}</p>
-                          <p className="text-sm text-gray-600">{editProfileData.position}</p>
+                          <p className="font-bold text-gray-900">{profileData.firstName} {profileData.lastName}</p>
+                          <p className="text-sm text-gray-600">{profileData.position}</p>
                         </div>
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        <p className="text-gray-600"><span className="font-semibold text-gray-900">Entreprise:</span> {profileData.company}</p>
+                        <p className="text-gray-600"><span className="font-semibold text-gray-900">Email:</span> {profileData.email}</p>
+                        <p className="text-gray-600"><span className="font-semibold text-gray-900">Téléphone:</span> {profileData.phone}</p>
                       </div>
                     </CardContent>
                   </Card>
 
+                  {/* Edit Profile Form */}
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <Label htmlFor="firstName" className="text-xs text-gray-600 mb-1 block">Prénom</Label>
+                        <Label className="text-xs font-semibold text-gray-700">Prénom</Label>
                         <Input
-                          id="firstName"
+                          type="text"
                           name="firstName"
                           value={editProfileData.firstName}
                           onChange={handleProfileChange}
-                          className="text-sm"
+                          className="mt-1 text-sm"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="lastName" className="text-xs text-gray-600 mb-1 block">Nom</Label>
+                        <Label className="text-xs font-semibold text-gray-700">Nom</Label>
                         <Input
-                          id="lastName"
+                          type="text"
                           name="lastName"
                           value={editProfileData.lastName}
                           onChange={handleProfileChange}
-                          className="text-sm"
+                          className="mt-1 text-sm"
                         />
                       </div>
                     </div>
-
                     <div>
-                      <Label htmlFor="email" className="text-xs text-gray-600 mb-1 block">Email</Label>
+                      <Label className="text-xs font-semibold text-gray-700">Position</Label>
                       <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={editProfileData.email}
-                        onChange={handleProfileChange}
-                        className="text-sm"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="phone" className="text-xs text-gray-600 mb-1 block">Téléphone</Label>
-                      <Input
-                        id="phone"
-                        name="phone"
-                        value={editProfileData.phone}
-                        onChange={handleProfileChange}
-                        className="text-sm"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="company" className="text-xs text-gray-600 mb-1 block">Entreprise</Label>
-                      <Input
-                        id="company"
-                        name="company"
-                        value={editProfileData.company}
-                        onChange={handleProfileChange}
-                        className="text-sm"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="position" className="text-xs text-gray-600 mb-1 block">Poste</Label>
-                      <Input
-                        id="position"
+                        type="text"
                         name="position"
                         value={editProfileData.position}
                         onChange={handleProfileChange}
-                        className="text-sm"
+                        className="mt-1 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold text-gray-700">Entreprise</Label>
+                      <Input
+                        type="text"
+                        name="company"
+                        value={editProfileData.company}
+                        onChange={handleProfileChange}
+                        className="mt-1 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold text-gray-700">Email</Label>
+                      <Input
+                        type="email"
+                        name="email"
+                        value={editProfileData.email}
+                        onChange={handleProfileChange}
+                        className="mt-1 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold text-gray-700">Téléphone</Label>
+                      <Input
+                        type="tel"
+                        name="phone"
+                        value={editProfileData.phone}
+                        onChange={handleProfileChange}
+                        className="mt-1 text-sm"
                       />
                     </div>
                   </div>
 
-                  <div className="flex gap-2 pt-3">
+                  <div className="flex gap-2 justify-end pt-4 border-t">
                     <Button
-                      onClick={handleProfileSave}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                      variant="outline"
+                      onClick={() => setProfileOpen(false)}
+                      className="text-sm"
                     >
-                      Enregistrer
+                      Fermer
                     </Button>
                     <Button
-                      onClick={() => {
-                        setEditProfileData(profileData);
-                        setProfileOpen(false);
-                      }}
-                      variant="outline"
-                      className="flex-1"
+                      onClick={handleProfileSave}
+                      className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 text-sm"
                     >
-                      Annuler
+                      Enregistrer
                     </Button>
                   </div>
                 </div>
