@@ -474,7 +474,7 @@ const Documents = () => {
       {/* Navigation Tabs */}
       <div className="my-6 sm:my-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-2 mb-20 sm:mb-24 md:mb-28 lg:mb-36 bg-transparent border-0 p-0">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-2 mb-20 sm:mb-20 md:mb-12 lg:mb-8 bg-transparent border-0 p-0">
             <TabsTrigger 
               value="all" 
               className={`flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 ${
@@ -535,7 +535,7 @@ const Documents = () => {
       </div>
 
       {/* Search and View Controls */}
-      <div className="flex flex-col gap-4 mb-8">
+      <div className="flex gap-3 mb-8 items-center">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           <Input
@@ -546,39 +546,39 @@ const Documents = () => {
             className="pl-10 bg-white border-2 border-gray-300 focus:border-blue-500 h-11"
           />
         </div>
-        <div className="flex gap-2 flex-wrap sm:flex-nowrap">
+        <div className="flex gap-2">
           <button
             onClick={() => setViewMode('grid')}
-            className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg transition-all flex items-center justify-center gap-2 ${
+            className={`p-2 rounded-lg transition-all flex items-center justify-center ${
               viewMode === 'grid'
                 ? 'bg-blue-600 text-white border-2 border-blue-600'
                 : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
             }`}
+            title="Vue Grille"
           >
-            <Grid3x3 className="h-4 w-4" />
-            <span className="hidden md:inline text-sm">Grille</span>
+            <Grid3x3 className="h-5 w-5" />
           </button>
           <button
             onClick={() => setViewMode('list')}
-            className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg transition-all flex items-center justify-center gap-2 ${
+            className={`p-2 rounded-lg transition-all flex items-center justify-center ${
               viewMode === 'list'
                 ? 'bg-blue-600 text-white border-2 border-blue-600'
                 : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
             }`}
+            title="Vue Liste"
           >
-            <List className="h-4 w-4" />
-            <span className="hidden md:inline text-sm">Liste</span>
+            <List className="h-5 w-5" />
           </button>
           <button
             onClick={() => setViewMode('kanban')}
-            className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg transition-all flex items-center justify-center gap-2 ${
+            className={`p-2 rounded-lg transition-all flex items-center justify-center ${
               viewMode === 'kanban'
                 ? 'bg-blue-600 text-white border-2 border-blue-600'
                 : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
             }`}
+            title="Vue Kanban"
           >
-            <Kanban className="h-4 w-4" />
-            <span className="hidden md:inline text-sm">Kanban</span>
+            <Kanban className="h-5 w-5" />
           </button>
         </div>
       </div>
@@ -921,7 +921,7 @@ const Documents = () => {
         <Card className="border-0 shadow-xl">
           <CardContent className="p-0">
             <Tabs defaultValue="workflow" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-2 my-6 sm:my-8 mb-16 sm:mb-20 md:mb-24 lg:mb-32 bg-transparent border-0 p-4">
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-2 my-6 sm:my-8 mb-16 sm:mb-16 md:mb-12 lg:mb-8 bg-transparent border-0 p-4">
                 <TabsTrigger 
                   value="workflow" 
                   className="flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
