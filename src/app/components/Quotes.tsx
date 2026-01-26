@@ -945,6 +945,258 @@ const Quotes = () => {
         </Dialog>
       )}
 
+      {/* New Quote Dialog */}
+      <Dialog open={showNewQuote} onOpenChange={setShowNewQuote}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Créer un nouveau devis</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Section Informations Client */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                Informations Client
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="new-company" className="text-sm font-medium">Entreprise *</Label>
+                  <Input
+                    id="new-company"
+                    value={newQuoteForm.company}
+                    onChange={(e) => setNewQuoteForm({...newQuoteForm, company: e.target.value})}
+                    placeholder="Nom de l'entreprise"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="new-contact" className="text-sm font-medium">Contact *</Label>
+                  <Input
+                    id="new-contact"
+                    value={newQuoteForm.contact}
+                    onChange={(e) => setNewQuoteForm({...newQuoteForm, contact: e.target.value})}
+                    placeholder="Nom du contact"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="new-email" className="text-sm font-medium">Email</Label>
+                  <Input
+                    id="new-email"
+                    type="email"
+                    value={newQuoteForm.email}
+                    onChange={(e) => setNewQuoteForm({...newQuoteForm, email: e.target.value})}
+                    placeholder="email@example.com"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="new-phone" className="text-sm font-medium">Téléphone</Label>
+                  <Input
+                    id="new-phone"
+                    value={newQuoteForm.phone}
+                    onChange={(e) => setNewQuoteForm({...newQuoteForm, phone: e.target.value})}
+                    placeholder="Téléphone"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section Articles */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Articles du devis
+              </h3>
+              <div className="space-y-3">
+                {newQuoteForm.items.map((item, index) => (
+                  <div key={item.id} className="grid grid-cols-12 gap-3 items-end">
+                    <div className="col-span-5">
+                      <Label htmlFor={`item-desc-${item.id}`} className="text-sm font-medium">Description</Label>
+                      <Input
+                        id={`item-desc-${item.id}`}
+                        value={item.description}
+                        onChange={(e) => {
+                          const updatedItems = [...newQuoteForm.items];
+                          updatedItems[index].description = e.target.value;
+                          setNewQuoteForm({...newQuoteForm, items: updatedItems});
+                        }}
+                        placeholder="Description de l'article"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <Label htmlFor={`item-qty-${item.id}`} className="text-sm font-medium">Quantité</Label>
+                      <Input
+                        id={`item-qty-${item.id}`}
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) => {
+                          const updatedItems = [...newQuoteForm.items];
+                          updatedItems[index].quantity = parseInt(e.target.value) || 1;
+                          setNewQuoteForm({...newQuoteForm, items: updatedItems});
+                        }}
+                        min="1"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div className="col-span-3">
+                      <Label htmlFor={`item-price-${item.id}`} className="text-sm font-medium">Prix unitaire</Label>
+                      <Input
+                        id={`item-price-${item.id}`}
+                        type="number"
+                        value={item.unitPrice}
+                        onChange={(e) => {
+                          const updatedItems = [...newQuoteForm.items];
+                          updatedItems[index].unitPrice = parseFloat(e.target.value) || 0;
+                          setNewQuoteForm({...newQuoteForm, items: updatedItems});
+                        }}
+                        min="0"
+                        step="0.01"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <Button
+                        onClick={() => {
+                          if (newQuoteForm.items.length > 1) {
+                            const updatedItems = newQuoteForm.items.filter((_, i) => i !== index);
+                            setNewQuoteForm({...newQuoteForm, items: updatedItems});
+                          }
+                        }}
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-red-600 hover:text-red-700"
+                        disabled={newQuoteForm.items.length === 1}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Button
+                onClick={() => {
+                  const newId = Math.max(...newQuoteForm.items.map(i => i.id), 0) + 1;
+                  setNewQuoteForm({
+                    ...newQuoteForm,
+                    items: [...newQuoteForm.items, { id: newId, description: '', quantity: 1, unitPrice: 0 }]
+                  });
+                }}
+                variant="outline"
+                className="mt-3 w-full"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Ajouter un article
+              </Button>
+            </div>
+
+            {/* Section Conditions */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                Conditions financières
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="new-expiryDays" className="text-sm font-medium">Validité du devis (jours)</Label>
+                  <Input
+                    id="new-expiryDays"
+                    type="number"
+                    value={newQuoteForm.expiryDays}
+                    onChange={(e) => setNewQuoteForm({...newQuoteForm, expiryDays: e.target.value})}
+                    min="1"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="new-taxRate" className="text-sm font-medium">Taux TVA (%)</Label>
+                  <Input
+                    id="new-taxRate"
+                    type="number"
+                    value={newQuoteForm.taxRate}
+                    onChange={(e) => setNewQuoteForm({...newQuoteForm, taxRate: e.target.value})}
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              <div className="mt-4">
+                <Label htmlFor="new-notes" className="text-sm font-medium">Notes / Conditions particulières</Label>
+                <textarea
+                  id="new-notes"
+                  value={newQuoteForm.notes}
+                  onChange={(e) => setNewQuoteForm({...newQuoteForm, notes: e.target.value})}
+                  placeholder="Notes ou conditions spéciales..."
+                  rows={3}
+                  className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Montants Récapitulatifs */}
+            {newQuoteForm.items.some(i => i.description) && (
+              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-lg border border-blue-200">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Montant HT:</span>
+                    <span className="font-semibold text-gray-900">
+                      €{newQuoteForm.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">TVA ({newQuoteForm.taxRate}%):</span>
+                    <span className="font-semibold text-gray-900">
+                      €{(newQuoteForm.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0) * (parseFloat(newQuoteForm.taxRate) / 100)).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-t border-blue-200 pt-2">
+                    <span className="text-gray-700 font-bold">Total TTC:</span>
+                    <span className="font-bold text-lg text-blue-600">
+                      €{(newQuoteForm.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0) * (1 + parseFloat(newQuoteForm.taxRate) / 100)).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Boutons Actions */}
+            <div className="flex gap-3 pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowNewQuote(false);
+                  setNewQuoteForm({
+                    company: '',
+                    contact: '',
+                    email: '',
+                    phone: '',
+                    expiryDays: '30',
+                    taxRate: '20',
+                    notes: '',
+                    items: [{ id: 1, description: '', quantity: 1, unitPrice: 0 }]
+                  });
+                }}
+                className="flex-1"
+              >
+                Annuler
+              </Button>
+              <Button
+                onClick={handleCreateQuote}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Créer le devis
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>
