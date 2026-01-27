@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/app/components/ui/alert-dialog';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Button } from '@/app/components/ui/button';
@@ -25,7 +26,8 @@ import {
   Grid3x3,
   List,
   Kanban,
-  Edit2
+  Edit2,
+  Lock
 } from 'lucide-react';
 
 interface Employee {
@@ -50,6 +52,8 @@ const HR = () => {
   const [showEmployeeCard, setShowEmployeeCard] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editFormData, setEditFormData] = useState<Employee | null>(null);
+  const [disableConfirmOpen, setDisableConfirmOpen] = useState(false);
+  const [employeeToDisable, setEmployeeToDisable] = useState<Employee | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([
     {
       id: 1,
@@ -161,6 +165,26 @@ const HR = () => {
     if (selectedEmployee) {
       setEditFormData({ ...selectedEmployee });
       setEditDialogOpen(true);
+    }
+  };
+
+  const handleDisableEmployee = (employee: Employee) => {
+    setEmployeeToDisable(employee);
+    setDisableConfirmOpen(true);
+  };
+
+  const confirmDisableEmployee = () => {
+    if (employeeToDisable) {
+      setEmployees(employees.map(e => 
+        e.id === employeeToDisable.id 
+          ? { ...e, status: 'inactive' as const }
+          : e
+      ));
+      if (selectedEmployee && selectedEmployee.id === employeeToDisable.id) {
+        setSelectedEmployee({ ...selectedEmployee, status: 'inactive' });
+      }
+      setDisableConfirmOpen(false);
+      setEmployeeToDisable(null);
     }
   };
 
@@ -527,15 +551,25 @@ const HR = () => {
                 <Badge className={getStatusColor(employee.status)}>
                   {getStatusLabel(employee.status)}
                 </Badge>
-                <button 
-                  onClick={() => {
-                    setSelectedEmployee(employee);
-                    setShowEmployeeCard(true);
-                  }}
-                  className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1">
-                  <FileText className="h-4 w-4" />
-                  Fiche
-                </button>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => {
+                      setSelectedEmployee(employee);
+                      setShowEmployeeCard(true);
+                    }}
+                    className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1">
+                    <FileText className="h-4 w-4" />
+                    Fiche
+                  </button>
+                  {employee.status === 'active' && (
+                    <button 
+                      onClick={() => handleDisableEmployee(employee)}
+                      className="text-gray-600 hover:text-red-600 text-sm font-medium flex items-center gap-1 transition-colors">
+                      <Lock className="h-4 w-4" />
+                      Désactiver
+                    </button>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -594,9 +628,17 @@ const HR = () => {
                             setSelectedEmployee(employee);
                             setShowEmployeeCard(true);
                           }}
-                          className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                          className="text-blue-600 hover:text-blue-700 text-sm font-medium mr-3">
                           Voir
                         </button>
+                        {employee.status === 'active' && (
+                          <button 
+                            onClick={() => handleDisableEmployee(employee)}
+                            className="text-gray-600 hover:text-red-600 text-sm font-medium transition-colors flex items-center gap-1">
+                            <Lock className="h-4 w-4" />
+                            Désactiver
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -1009,6 +1051,41 @@ const HR = () => {
             </DialogContent>
           </Dialog>
         )}
+
+        {/* Disable Employee Confirmation Dialog */}
+        <AlertDialog open={disableConfirmOpen} onOpenChange={setDisableConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-lg">Désactiver le collaborateur</AlertDialogTitle>
+              <AlertDialogDescription className="text-base">
+                Êtes-vous sûr de vouloir désactiver <span className="font-semibold text-gray-900">{employeeToDisable?.firstName} {employeeToDisable?.lastName}</span> ?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 my-4">
+              <div className="flex gap-3">
+                <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-yellow-800">
+                  <p className="font-medium mb-1">Conséquences de cette action :</p>
+                  <ul className="list-disc list-inside space-y-1 text-xs">
+                    <li>L'utilisateur ne pourra plus accéder à ses fiches</li>
+                    <li>Les projets en cours seront conservés dans l'historique</li>
+                    <li>Cette action peut être annulée en réactivant l'utilisateur</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <AlertDialogCancel className="border border-gray-300 text-gray-700 hover:bg-gray-50">
+                Annuler
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={confirmDisableEmployee}
+                className="bg-red-600 text-white hover:bg-red-700">
+                Désactiver
+              </AlertDialogAction>
+            </div>
+          </AlertDialogContent>
+        </AlertDialog>
     </div>
   );
 };

@@ -172,6 +172,14 @@ const Accounting = () => {
     }
   };
 
+  const handleViewDetails = (projectId: number) => {
+    // Logic to view project details
+  };
+
+  const handleDelete = (projectId: number) => {
+    // Logic to delete project
+  };
+
   const getTabIcon = (tab: string) => {
     switch (tab) {
       case 'sales':
@@ -677,7 +685,7 @@ const Accounting = () => {
                     Modifier
                   </Button>
                   <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
-                    Exporter
+                    Télécharger
                   </Button>
                 </div>
               </div>

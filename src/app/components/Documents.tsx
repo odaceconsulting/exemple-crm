@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/ta
 import { Input } from '@/app/components/ui/input';
 import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
+import { Label } from '@/app/components/ui/label';
 import { 
   Upload, 
   File, 
@@ -181,6 +182,21 @@ const Documents = () => {
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [selectedDocForShare, setSelectedDocForShare] = useState<any>(null);
+  const [sharedUsers, setSharedUsers] = useState<any[]>([]);
+  const [newShareUser, setNewShareUser] = useState<string>('');
+  const [newSharePermission, setNewSharePermission] = useState<string>('view');
+
+  // Mock user list
+  const allUsers = [
+    { id: 1, name: 'Marie Dupont' },
+    { id: 2, name: 'Jean Martin' },
+    { id: 3, name: 'Sophie Bernard' },
+    { id: 4, name: 'Alice Rousseau' },
+    { id: 5, name: 'Thomas Petit' },
+    { id: 6, name: 'Emma Moreau' }
+  ];
 
   const handleDeleteDocument = (id: number) => {
     setDeleteTarget(id);
@@ -195,6 +211,35 @@ const Documents = () => {
       setDeleteConfirmOpen(false);
       setDeleteTarget(null);
     }
+  };
+
+  const handleShareDocument = (doc: any) => {
+    setSelectedDocForShare(doc);
+    setSharedUsers([]);
+    setNewShareUser('');
+    setNewSharePermission('view');
+    setIsShareDialogOpen(true);
+  };
+
+  const handleAddShareUser = () => {
+    if (newShareUser && !sharedUsers.find(u => u.name === newShareUser)) {
+      const user = allUsers.find(u => u.name === newShareUser);
+      if (user) {
+        setSharedUsers([...sharedUsers, { ...user, permission: newSharePermission }]);
+        setNewShareUser('');
+        setNewSharePermission('view');
+      }
+    }
+  };
+
+  const handleRemoveShareUser = (userId: number) => {
+    setSharedUsers(sharedUsers.filter(u => u.id !== userId));
+  };
+
+  const handleSaveShare = () => {
+    console.log('Saving share settings for', selectedDocForShare.name, sharedUsers);
+    setIsShareDialogOpen(false);
+    alert('Document partagé avec succès!');
   };
 
   const categories = [
@@ -327,12 +372,12 @@ const Documents = () => {
             <DialogTrigger asChild>
               <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full hover:from-blue-700 hover:to-indigo-700 transition-all flex items-center gap-2 border-2 border-blue-700 shadow-lg hover:shadow-xl font-semibold">
                 <Upload className="h-5 w-5" />
-                <span>Télécharger Document</span>
+                <span>Téléverser Document</span>
               </button>
             </DialogTrigger>
             <DialogContent className="max-w-lg md:max-w-2xl">
               <DialogHeader>
-                <DialogTitle className="text-lg md:text-xl">Télécharger un Document</DialogTitle>
+                <DialogTitle className="text-lg md:text-xl">Téléverser un Document</DialogTitle>
               </DialogHeader>
               <div className="py-4 space-y-6 max-h-[60vh] overflow-y-auto">
                 {/* Drag and Drop Zone */}
@@ -407,7 +452,7 @@ const Documents = () => {
                   onClick={() => setIsUploadDialogOpen(false)}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  Télécharger
+                  Téléverser
                 </button>
               </div>
             </DialogContent>
@@ -618,10 +663,12 @@ const Documents = () => {
                             <Download className="h-4 w-4" />
                             Télécharger
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="flex items-center gap-2 cursor-pointer text-indigo-600 hover:text-indigo-700">
-                            <Eye className="h-4 w-4" />
-                            Voir
-                          </DropdownMenuItem>
+                          {doc.type === 'pdf' && (
+                            <DropdownMenuItem className="flex items-center gap-2 cursor-pointer text-indigo-600 hover:text-indigo-700">
+                              <Eye className="h-4 w-4" />
+                              Voir
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem 
                             className="flex items-center gap-2 cursor-pointer text-red-600 hover:text-red-700"
                             onSelect={() => handleDeleteDocument(doc.id)}
@@ -761,16 +808,23 @@ const Documents = () => {
                             <button className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" title="Télécharger">
                               <Download className="h-4 w-4" />
                             </button>
-                            <button className="p-2 text-indigo-600 hover:bg-indigo-100 rounded-lg transition-colors" title="Voir">
-                              <Eye className="h-4 w-4" />
-                            </button>
-                            <button className="p-2 text-purple-600 hover:bg-purple-100 rounded-lg transition-colors" title="Historique">
-                              <History className="h-4 w-4" />
-                            </button>
-                            <button className="p-2 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors" title="Partager">
+                            {doc.type === 'pdf' && (
+                              <button className="p-2 text-indigo-600 hover:bg-indigo-100 rounded-lg transition-colors" title="Voir">
+                                <Eye className="h-4 w-4" />
+                              </button>
+                            )}
+                            <button 
+                              onClick={() => handleShareDocument(doc)}
+                              className="p-2 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors" 
+                              title="Partager"
+                            >
                               <Share2 className="h-4 w-4" />
                             </button>
-                            <button className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Supprimer">
+                            <button 
+                              onClick={() => handleDeleteDocument(doc.id)}
+                              className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" 
+                              title="Supprimer"
+                            >
                               <Trash2 className="h-4 w-4" />
                             </button>
                           </div>
@@ -905,15 +959,15 @@ const Documents = () => {
       )}
 
       {/* Advanced GED Features Section */}
-      <div className="mt-12 space-y-6">
-        <div className="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-xl p-8 text-white shadow-lg">
-          <div className="flex items-center gap-4 mb-2">
-            <div className="p-3 bg-white bg-opacity-20 rounded-lg">
-              <Zap className="h-8 w-8" />
+      <div className="mt-8 space-y-4">
+        <div className="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-xl p-5 md:p-6 text-white shadow-lg">
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-white bg-opacity-20 rounded-lg flex-shrink-0 mt-1">
+              <Zap className="h-5 w-5 md:h-6 md:w-6" />
             </div>
-            <div>
-              <h2 className="text-3xl font-bold">Fonctionnalités Avancées de GED</h2>
-              <p className="text-indigo-100 mt-1">Gestion complète du cycle de vie des documents avec workflows, versioning et contrôle d'accès</p>
+            <div className="min-w-0">
+              <h2 className="text-xl md:text-2xl font-bold">Fonctionnalités Avancées</h2>
+              <p className="text-sm md:text-base text-indigo-100 mt-1">Workflows et contrôle d'accès</p>
             </div>
           </div>
         </div>
@@ -921,7 +975,7 @@ const Documents = () => {
         <Card className="border-0 shadow-xl">
           <CardContent className="p-0">
             <Tabs defaultValue="workflow" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-2 my-6 sm:my-8 mb-16 sm:mb-16 md:mb-12 lg:mb-8 bg-transparent border-0 p-4">
+              <TabsList className="grid w-full grid-cols-2 gap-2 my-6 sm:my-8 mb-16 sm:mb-16 md:mb-12 lg:mb-8 bg-transparent border-0 p-4">
                 <TabsTrigger 
                   value="workflow" 
                   className="flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
@@ -930,25 +984,11 @@ const Documents = () => {
                   <span className="inline">Workflows</span>
                 </TabsTrigger>
                 <TabsTrigger 
-                  value="versioning" 
-                  className="flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
-                >
-                  <History className="h-4 w-4" />
-                  <span className="inline">Versions</span>
-                </TabsTrigger>
-                <TabsTrigger 
                   value="access" 
                   className="flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
                 >
                   <Lock className="h-4 w-4" />
                   <span className="inline">Accès</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="classification" 
-                  className="flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
-                >
-                  <Zap className="h-4 w-4" />
-                  <span className="inline">Classification</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -1020,8 +1060,8 @@ const Documents = () => {
                 </div>
               </TabsContent>
 
-              {/* Versioning Tab */}
-              <TabsContent value="versioning" className="p-4 sm:p-8 space-y-4 sm:space-y-6 bg-white">
+              {/* Versioning Tab - Hidden */}
+              <TabsContent value="versioning" className="hidden p-4 sm:p-8 space-y-4 sm:space-y-6 bg-white">
                 <div className="space-y-3 sm:space-y-4">
                   {[...Array(3)].map((_, idx) => (
                     <Card key={idx} className={`border-2 shadow-md hover:shadow-lg transition-all ${idx === 0 ? 'border-indigo-300 bg-gradient-to-r from-indigo-50 to-blue-50' : 'border-gray-200'}`}>
@@ -1057,46 +1097,192 @@ const Documents = () => {
 
               {/* Access Control Tab */}
               <TabsContent value="access" className="p-8 space-y-6 bg-white">
-                <Button className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all">
-                  <Share2 className="h-5 w-5" />
-                  Partager le Document
-                </Button>
-                <div className="space-y-3">
-                  <h3 className="text-lg font-bold text-gray-900">Accès Actuels</h3>
-                  {[
-                    { user: 'Marie Dupont', role: 'Propriétaire', permission: 'Admin', icon: '👤', color: 'indigo' },
-                    { user: 'Jean Martin', role: 'Manager', permission: 'Éditer', icon: '👥', color: 'blue' },
-                    { user: 'Sophie Bernard', role: 'User', permission: 'Consulter', icon: '👁️', color: 'emerald' }
-                  ].map((access, idx) => (
-                    <Card key={idx} className="border-2 border-gray-200 shadow-md hover:shadow-lg transition-all">
-                      <CardContent className="p-5">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className="p-3 bg-indigo-100 rounded-lg">
-                              <User className="h-5 w-5 text-indigo-600" />
-                            </div>
-                            <div>
-                              <p className="font-bold text-gray-900">{access.user}</p>
-                              <p className="text-sm text-gray-500">{access.role}</p>
-                            </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Permissions</h2>
+                  
+                  {/* Permissions Definition Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    {/* Consulter Permission */}
+                    <Card className="border-2 border-emerald-200 shadow-md hover:shadow-lg transition-all bg-gradient-to-br from-emerald-50 to-white">
+                      <CardContent className="p-6">
+                        <div className="flex items-start gap-3 mb-4">
+                          <div className="p-3 bg-emerald-100 rounded-lg flex-shrink-0">
+                            <Eye className="h-6 w-6 text-emerald-600" />
                           </div>
-                          <div className="flex items-center gap-3">
-                            <Badge className="bg-indigo-100 text-indigo-800 font-bold text-xs px-3 py-1">
-                              {access.permission}
-                            </Badge>
-                            <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                              <Trash2 className="h-4 w-4" />
-                            </button>
+                          <div>
+                            <h3 className="font-bold text-emerald-900 text-lg">👁️ Consulter</h3>
+                            <p className="text-xs text-emerald-600 font-semibold uppercase tracking-wide">Lecture seule</p>
                           </div>
+                        </div>
+                        <div className="space-y-2 border-t border-emerald-200 pt-4">
+                          <p className="text-sm text-gray-700 font-medium mb-3">Autorisé :</p>
+                          <ul className="space-y-2 text-sm text-gray-600">
+                            <li className="flex items-start gap-2">
+                              <span className="text-emerald-600 font-bold">✓</span>
+                              <span>Visualiser le document (PDF)</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-emerald-600 font-bold">✓</span>
+                              <span>Télécharger le document</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-emerald-600 font-bold">✓</span>
+                              <span>Voir les métadonnées</span>
+                            </li>
+                          </ul>
+                          <p className="text-sm text-gray-700 font-medium mt-3 mb-2">Non autorisé :</p>
+                          <ul className="space-y-2 text-sm text-gray-600">
+                            <li className="flex items-start gap-2">
+                              <span className="text-red-600 font-bold">✗</span>
+                              <span>Modifier le document</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-red-600 font-bold">✗</span>
+                              <span>Supprimer le document</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-red-600 font-bold">✗</span>
+                              <span>Partager avec d'autres</span>
+                            </li>
+                          </ul>
                         </div>
                       </CardContent>
                     </Card>
-                  ))}
+
+                    {/* Éditer Permission */}
+                    <Card className="border-2 border-blue-200 shadow-md hover:shadow-lg transition-all bg-gradient-to-br from-blue-50 to-white">
+                      <CardContent className="p-6">
+                        <div className="flex items-start gap-3 mb-4">
+                          <div className="p-3 bg-blue-100 rounded-lg flex-shrink-0">
+                            <FileCheck className="h-6 w-6 text-blue-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-blue-900 text-lg">✏️ Éditer</h3>
+                            <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide">Lecture & Modification</p>
+                          </div>
+                        </div>
+                        <div className="space-y-2 border-t border-blue-200 pt-4">
+                          <p className="text-sm text-gray-700 font-medium mb-3">Autorisé :</p>
+                          <ul className="space-y-2 text-sm text-gray-600">
+                            <li className="flex items-start gap-2">
+                              <span className="text-blue-600 font-bold">✓</span>
+                              <span>Visualiser le document (PDF)</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-blue-600 font-bold">✓</span>
+                              <span>Télécharger le document</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-blue-600 font-bold">✓</span>
+                              <span>Modifier le document</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-blue-600 font-bold">✓</span>
+                              <span>Voir les métadonnées</span>
+                            </li>
+                          </ul>
+                          <p className="text-sm text-gray-700 font-medium mt-3 mb-2">Non autorisé :</p>
+                          <ul className="space-y-2 text-sm text-gray-600">
+                            <li className="flex items-start gap-2">
+                              <span className="text-red-600 font-bold">✗</span>
+                              <span>Supprimer le document</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-red-600 font-bold">✗</span>
+                              <span>Gérer les permissions</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-red-600 font-bold">✗</span>
+                              <span>Partager avec d'autres</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Admin Permission */}
+                    <Card className="border-2 border-purple-200 shadow-md hover:shadow-lg transition-all bg-gradient-to-br from-purple-50 to-white">
+                      <CardContent className="p-6">
+                        <div className="flex items-start gap-3 mb-4">
+                          <div className="p-3 bg-purple-100 rounded-lg flex-shrink-0">
+                            <Lock className="h-6 w-6 text-purple-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-purple-900 text-lg">🔐 Admin</h3>
+                            <p className="text-xs text-purple-600 font-semibold uppercase tracking-wide">Contrôle complet</p>
+                          </div>
+                        </div>
+                        <div className="space-y-2 border-t border-purple-200 pt-4">
+                          <p className="text-sm text-gray-700 font-medium mb-3">Autorisé :</p>
+                          <ul className="space-y-2 text-sm text-gray-600">
+                            <li className="flex items-start gap-2">
+                              <span className="text-purple-600 font-bold">✓</span>
+                              <span>Visualiser le document (PDF)</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-purple-600 font-bold">✓</span>
+                              <span>Télécharger le document</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-purple-600 font-bold">✓</span>
+                              <span>Modifier le document</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-purple-600 font-bold">✓</span>
+                              <span>Supprimer le document</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-purple-600 font-bold">✓</span>
+                              <span>Gérer les permissions</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-purple-600 font-bold">✓</span>
+                              <span>Partager avec d'autres</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Current Accesses */}
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-bold text-gray-900">Accès Actuels</h3>
+                    {[
+                      { user: 'Marie Dupont', role: 'Propriétaire', permission: 'Admin', icon: '👤', color: 'indigo' },
+                      { user: 'Jean Martin', role: 'Manager', permission: 'Éditer', icon: '👥', color: 'blue' },
+                      { user: 'Sophie Bernard', role: 'User', permission: 'Consulter', icon: '👁️', color: 'emerald' }
+                    ].map((access, idx) => (
+                      <Card key={idx} className="border-2 border-gray-200 shadow-md hover:shadow-lg transition-all">
+                        <CardContent className="p-5">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className="p-3 bg-indigo-100 rounded-lg">
+                                <User className="h-5 w-5 text-indigo-600" />
+                              </div>
+                              <div>
+                                <p className="font-bold text-gray-900">{access.user}</p>
+                                <p className="text-sm text-gray-500">{access.role}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <Badge className="bg-indigo-100 text-indigo-800 font-bold text-xs px-3 py-1">
+                                {access.permission}
+                              </Badge>
+                              <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
                 </div>
               </TabsContent>
 
-              {/* Classification IA Tab */}
-              <TabsContent value="classification" className="p-8 space-y-6 bg-white">
+              {/* Classification IA Tab - Hidden */}
+              <TabsContent value="classification" className="hidden p-8 space-y-6 bg-white">
                 <div className="bg-gradient-to-r from-purple-100 to-indigo-100 border-2 border-purple-300 rounded-xl p-6 mb-6">
                   <div className="flex items-start gap-4">
                     <div className="p-3 bg-purple-100 rounded-lg flex-shrink-0">
@@ -1146,6 +1332,132 @@ const Documents = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Share Document Dialog */}
+      <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Partager le Document</DialogTitle>
+          </DialogHeader>
+          {selectedDocForShare && (
+            <div className="space-y-6 py-4">
+              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm text-gray-700">
+                  <strong>Document :</strong> {selectedDocForShare.name}
+                </p>
+              </div>
+
+              {/* Add User Section */}
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold">Ajouter un utilisateur</Label>
+                <div className="flex gap-2">
+                  <select 
+                    value={newShareUser}
+                    onChange={(e) => setNewShareUser(e.target.value)}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  >
+                    <option value="">Sélectionner un utilisateur...</option>
+                    {allUsers.filter(u => !sharedUsers.find(su => su.id === u.id)).map(user => (
+                      <option key={user.id} value={user.name}>
+                        {user.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Permission Selection */}
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold">Permissions</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={() => setNewSharePermission('view')}
+                    className={`p-3 rounded-lg border-2 transition-all text-sm font-semibold ${
+                      newSharePermission === 'view'
+                        ? 'border-blue-600 bg-blue-50 text-blue-900'
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    👁️ Consulter
+                  </button>
+                  <button
+                    onClick={() => setNewSharePermission('edit')}
+                    className={`p-3 rounded-lg border-2 transition-all text-sm font-semibold ${
+                      newSharePermission === 'edit'
+                        ? 'border-blue-600 bg-blue-50 text-blue-900'
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    ✏️ Éditer
+                  </button>
+                  <button
+                    onClick={() => setNewSharePermission('admin')}
+                    className={`p-3 rounded-lg border-2 transition-all text-sm font-semibold ${
+                      newSharePermission === 'admin'
+                        ? 'border-blue-600 bg-blue-50 text-blue-900'
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    🔐 Admin
+                  </button>
+                </div>
+              </div>
+
+              {/* Add Button */}
+              <Button 
+                onClick={handleAddShareUser}
+                disabled={!newShareUser}
+                className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white"
+              >
+                Ajouter l'utilisateur
+              </Button>
+
+              {/* Shared Users List */}
+              {sharedUsers.length > 0 && (
+                <div className="space-y-3 pt-4 border-t border-gray-200">
+                  <Label className="text-sm font-semibold">Accès partagés</Label>
+                  {sharedUsers.map((user) => (
+                    <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-indigo-100 rounded-lg">
+                          <User className="h-4 w-4 text-indigo-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900 text-sm">{user.name}</p>
+                          <p className="text-xs text-gray-500">
+                            {user.permission === 'view' && '👁️ Consulter'}
+                            {user.permission === 'edit' && '✏️ Éditer'}
+                            {user.permission === 'admin' && '🔐 Admin'}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleRemoveShareUser(user.id)}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
+                <Button variant="outline" onClick={() => setIsShareDialogOpen(false)}>
+                  Annuler
+                </Button>
+                <Button 
+                  onClick={handleSaveShare}
+                  className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white"
+                >
+                  Enregistrer
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

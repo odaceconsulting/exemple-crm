@@ -757,7 +757,7 @@ const Invoicing = () => {
                     Modifier
                   </Button>
                   <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
-                    Exporter
+                    Télécharger
                   </Button>
                 </div>
               </div>
