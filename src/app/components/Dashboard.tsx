@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/app/components/ui/dialog';
 import { Input } from '@/app/components/ui/input';
 import { Button } from '@/app/components/ui/button';
 import { Label } from '@/app/components/ui/label';
+import { Badge } from '@/app/components/ui/badge';
 import { 
   TrendingUp, 
   Users, 
@@ -17,13 +18,18 @@ import {
   Clock,
   Search,
   Filter,
-  X
+  X,
+  BarChart3,
+  Award,
+  GripVertical
 } from 'lucide-react';
 import { AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const Dashboard = () => {
   const [showNewOpportunity, setShowNewOpportunity] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [draggedWidget, setDraggedWidget] = useState<string | null>(null);
+  
   const [opportunityForm, setOpportunityForm] = useState({
     title: '',
     company: '',
@@ -34,9 +40,9 @@ const Dashboard = () => {
   // Filter states
   const [filters, setFilters] = useState({
     searchQuery: '',
-    type: 'all', // all, companies, contacts, opportunities, projects
-    status: 'all', // all, active, completed, pending
-    dateRange: 'all', // all, today, week, month
+    type: 'all',
+    status: 'all',
+    dateRange: 'all',
     minValue: '',
     maxValue: ''
   });
@@ -161,6 +167,33 @@ const Dashboard = () => {
     { client: 'Future Corp', subject: 'Suivi projet', time: '15:00', date: 'Demain' }
   ];
 
+  // RH Data - Suivi collaborateurs
+  const rhData = [
+    { month: 'Jan', actifs: 45, enCongé: 8, inactifs: 2 },
+    { month: 'Fév', actifs: 46, enCongé: 7, inactifs: 2 },
+    { month: 'Mar', actifs: 47, enCongé: 6, inactifs: 2 },
+    { month: 'Avr', actifs: 48, enCongé: 5, inactifs: 2 },
+    { month: 'Mai', actifs: 50, enCongé: 4, inactifs: 1 },
+    { month: 'Jun', actifs: 52, enCongé: 3, inactifs: 0 }
+  ];
+
+  // Clients Distribution
+  const clientsDistribution = [
+    { name: 'PME', value: 32, color: '#3b82f6' },
+    { name: 'ETI', value: 28, color: '#8b5cf6' },
+    { name: 'Startups', value: 18, color: '#f59e0b' },
+    { name: 'Entreprises', value: 22, color: '#10b981' }
+  ];
+
+  // Team Performance Data
+  const teamPerformanceData = [
+    { name: 'Marie D.', ca: 45000, leads: 24, conversion: 28 },
+    { name: 'Jean M.', ca: 38000, leads: 18, conversion: 22 },
+    { name: 'Sophie B.', ca: 52000, leads: 31, conversion: 32 },
+    { name: 'Pierre L.', ca: 35000, leads: 15, conversion: 20 },
+    { name: 'Alice R.', ca: 42000, leads: 22, conversion: 25 }
+  ];
+
   return (
     <div className="p-6 space-y-6 bg-gray-50">
       {/* Header */}
@@ -169,16 +202,6 @@ const Dashboard = () => {
           <h1 className="text-3xl font-semibold text-gray-900">Dashboard</h1>
           <p className="text-gray-500 mt-1">Vue d'ensemble de votre activité commerciale</p>
         </div>
-        {/* <div className="flex gap-3">
-          <button className="hidden md:inline-block px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-            Export
-          </button>
-          <button 
-            onClick={() => setShowNewOpportunity(true)}
-            className="hidden md:inline-block px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors border-2 border-blue-700">
-            + Nouvelle Opportunité
-          </button>
-        </div> */}
       </div>
 
       {/* Advanced Search and Filters */}
@@ -548,6 +571,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
+      </section>
 
       {/* Recent Activities */}
       <Card className="border-0 shadow-sm">
@@ -582,7 +606,146 @@ const Dashboard = () => {
           </div>
         </CardContent>
       </Card>
-    </section>
+
+      {/* Additional Analytics Section */}
+      <section aria-labelledby="analytics-heading" className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 id="analytics-heading" className="text-xl font-semibold text-gray-900">Analytiques Avancées</h2>
+            <p className="text-sm text-gray-500">Suivi des RHs, répartition clients et performance équipe</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* RH Tracking Chart */}
+          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow cursor-move" 
+            draggable 
+            onDragStart={() => setDraggedWidget('rh')}
+            onDragEnd={() => setDraggedWidget(null)}>
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-blue-600" />
+                  Suivi RHs
+                </CardTitle>
+                <GripVertical className="h-4 w-4 text-gray-400" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={rhData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="month" stroke="#6b7280" />
+                  <YAxis stroke="#6b7280" />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                  />
+                  <Legend />
+                  <Line type="monotone" dataKey="actifs" stroke="#10b981" strokeWidth={2} name="Actifs" />
+                  <Line type="monotone" dataKey="enCongé" stroke="#f59e0b" strokeWidth={2} name="En congé" />
+                  <Line type="monotone" dataKey="inactifs" stroke="#ef4444" strokeWidth={2} name="Inactifs" />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Clients Distribution */}
+          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow cursor-move"
+            draggable 
+            onDragStart={() => setDraggedWidget('clients')}
+            onDragEnd={() => setDraggedWidget(null)}>
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5 text-purple-600" />
+                  Répartition Clients
+                </CardTitle>
+                <GripVertical className="h-4 w-4 text-gray-400" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={clientsDistribution}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {clientsDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="mt-4 space-y-2">
+                {clientsDistribution.map((item, index) => (
+                  <div key={index} className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
+                      <span className="text-sm text-gray-600">{item.name}</span>
+                    </div>
+                    <span className="text-sm font-semibold text-gray-900">{item.value}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Team Performance */}
+        <Card className="border-0 shadow-sm hover:shadow-md transition-shadow cursor-move"
+          draggable 
+          onDragStart={() => setDraggedWidget('performance')}
+          onDragEnd={() => setDraggedWidget(null)}>
+          <CardHeader>
+            <div className="flex justify-between items-start">
+              <CardTitle className="flex items-center gap-2">
+                <Award className="h-5 w-5 text-orange-600" />
+                Performance Équipe
+              </CardTitle>
+              <GripVertical className="h-4 w-4 text-gray-400" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Collaborateur</th>
+                    <th className="text-right py-3 px-4 text-sm font-semibold text-gray-600">CA</th>
+                    <th className="text-right py-3 px-4 text-sm font-semibold text-gray-600">Leads</th>
+                    <th className="text-right py-3 px-4 text-sm font-semibold text-gray-600">Conversion</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {teamPerformanceData.map((member, index) => (
+                    <tr key={index} className="hover:bg-gray-50 transition-colors">
+                      <td className="py-4 px-4 text-sm font-medium text-gray-900">{member.name}</td>
+                      <td className="py-4 px-4 text-sm text-right text-gray-600">€{member.ca.toLocaleString()}</td>
+                      <td className="py-4 px-4 text-sm text-right text-gray-600">{member.leads}</td>
+                      <td className="py-4 px-4 text-sm text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <div className="w-16 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-blue-600 h-2 rounded-full" 
+                              style={{ width: `${member.conversion}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-gray-900 font-semibold">{member.conversion}%</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
     </div>
   );
 };

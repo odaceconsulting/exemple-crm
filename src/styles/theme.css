@@ -39,6 +39,55 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  
+  /* Theme Colors - Light (default) */
+  --theme-primary: #2563eb;
+  --theme-primary-dark: #1d4ed8;
+  --theme-secondary: #f3f4f6;
+  --theme-accent: #2563eb;
+  --theme-text: #111827;
+  --theme-bg: #f9fafb;
+  --theme-card: #ffffff;
+  --theme-border: #e5e7eb;
+}
+
+/* Blue Theme */
+html.theme-blue,
+body.theme-blue {
+  --theme-primary: #2563eb;
+  --theme-primary-dark: #1d4ed8;
+  --theme-secondary: #dbeafe;
+  --theme-accent: #2563eb;
+  --theme-text: #1e3a8a;
+  --theme-bg: #eff6ff;
+  --theme-card: #dbeafe;
+  --theme-border: #93c5fd;
+}
+
+/* Green Theme */
+html.theme-green,
+body.theme-green {
+  --theme-primary: #059669;
+  --theme-primary-dark: #047857;
+  --theme-secondary: #dcfce7;
+  --theme-accent: #059669;
+  --theme-text: #065f46;
+  --theme-bg: #f0fdf4;
+  --theme-card: #dcfce7;
+  --theme-border: #86efac;
+}
+
+/* Purple Theme */
+html.theme-purple,
+body.theme-purple {
+  --theme-primary: #9333ea;
+  --theme-primary-dark: #7e22ce;
+  --theme-secondary: #e9d5ff;
+  --theme-accent: #9333ea;
+  --theme-text: #581c87;
+  --theme-bg: #faf5ff;
+  --theme-card: #e9d5ff;
+  --theme-border: #d8b4fe;
 }
 
 .dark {
@@ -126,6 +175,38 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Theme-aware button colors */
+  html.theme-blue button.bg-blue-600,
+  html.theme-blue [class*="bg-blue-600"] {
+    background-color: #2563eb !important;
+  }
+
+  html.theme-green button.bg-blue-600,
+  html.theme-green [class*="bg-blue-600"] {
+    background-color: #059669 !important;
+  }
+
+  html.theme-purple button.bg-blue-600,
+  html.theme-purple [class*="bg-blue-600"] {
+    background-color: #9333ea !important;
+  }
+
+  /* Theme-aware hover states */
+  html.theme-blue button.hover\:bg-blue-700:hover,
+  html.theme-blue [class*="hover:bg-blue-700"]:hover {
+    background-color: #1d4ed8 !important;
+  }
+
+  html.theme-green button.hover\:bg-blue-700:hover,
+  html.theme-green [class*="hover:bg-blue-700"]:hover {
+    background-color: #047857 !important;
+  }
+
+  html.theme-purple button.hover\:bg-blue-700:hover,
+  html.theme-purple [class*="hover:bg-blue-700"]:hover {
+    background-color: #7e22ce !important;
   }
 
   /**

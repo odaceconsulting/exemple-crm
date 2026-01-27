@@ -18,7 +18,8 @@ import {
   X,
   CreditCard,
   BarChart3,
-  FileCheck
+  FileCheck,
+  Palette
 } from 'lucide-react';
 import Dashboard from '@/app/components/Dashboard';
 import Companies from '@/app/components/Companies';
@@ -34,20 +35,23 @@ import Accounting from '@/app/components/Accounting';
 import Quotes from '@/app/components/Quotes';
 import Settings from '@/app/components/Settings';
 import { Input } from '@/app/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/app/components/ui/dialog';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Label } from '@/app/components/ui/label';
+import { useTheme } from '@/app/context/ThemeContext';
 
 type PageType = 'dashboard' | 'companies' | 'contacts' | 'pipeline' | 'documents' | 'invoicing' | 'projects' | 'hr' | 'marketing' | 'payments' | 'accounting' | 'quotes' | 'settings';
 
-export default function App() {
+function AppContent() {
+  const { theme, setTheme } = useTheme();
   const [currentPage, setCurrentPage] = useState<PageType>('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [themeOpen, setThemeOpen] = useState(false);
   const [profileData, setProfileData] = useState({
     firstName: 'Marie',
     lastName: 'Dupont',
@@ -291,6 +295,50 @@ export default function App() {
 
           {/* User Menu - Icons */}
           <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
+            {/* Theme Switcher */}
+            <Dialog open={themeOpen} onOpenChange={setThemeOpen}>
+              <DialogTrigger asChild>
+                <button className="p-2 hover:bg-blue-50 rounded-lg transition-colors group" title="Thème">
+                  <Palette className="h-5 w-5 text-gray-600 group-hover:text-blue-600" />
+                </button>
+              </DialogTrigger>
+              <DialogContent className="max-w-sm">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Palette className="h-5 w-5 text-blue-600" />
+                    Thème Couleur
+                  </DialogTitle>
+                  <DialogDescription>
+                    Sélectionnez le thème de couleur pour votre CRM
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid grid-cols-2 gap-3 py-4">
+                  {[
+                    { name: 'Clair', value: 'light', color: 'bg-gray-100 border-gray-300', accent: 'ring-gray-400' },
+                    { name: 'Bleu', value: 'blue', color: 'bg-blue-100 border-blue-300', accent: 'ring-blue-400' },
+                    { name: 'Vert', value: 'green', color: 'bg-green-100 border-green-300', accent: 'ring-green-400' },
+                    { name: 'Violet', value: 'purple', color: 'bg-purple-100 border-purple-300', accent: 'ring-purple-400' }
+                  ].map((t) => (
+                    <button
+                      key={t.value}
+                      onClick={() => {
+                        setTheme(t.value as any);
+                        setThemeOpen(false);
+                      }}
+                      className={`p-4 rounded-lg border-2 transition-all text-center ${
+                        theme === t.value 
+                          ? `${t.color} ring-2 ${t.accent} font-semibold` 
+                          : 'border-gray-200 hover:border-gray-300 bg-white'
+                      }`}>
+                      <div className={`w-8 h-8 rounded-full ${t.color} mx-auto mb-2 border-2`}></div>
+                      <p className="text-sm font-medium">{t.name}</p>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 text-center">Le thème sélectionné s'appliquera à tout le CRM</p>
+              </DialogContent>
+            </Dialog>
+
             {/* Notifications */}
             <Dialog open={notificationsOpen} onOpenChange={setNotificationsOpen}>
               <DialogTrigger asChild>
@@ -305,6 +353,9 @@ export default function App() {
                     <Bell className="h-5 w-5 text-blue-600" />
                     Notifications
                   </DialogTitle>
+                  <DialogDescription>
+                    Vos notifications récentes
+                  </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {notifications.map((notif) => (
@@ -344,6 +395,9 @@ export default function App() {
                     </div>
                     Mon Profil
                   </DialogTitle>
+                  <DialogDescription>
+                    Gestion de votre profil utilisateur
+                  </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 shadow-sm">
@@ -465,6 +519,12 @@ export default function App() {
         <div className="fixed inset-0 bg-black/50 md:hidden z-30" onClick={() => setMobileMenuOpen(false)} />
       )}
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AppContent />
   );
 }
 

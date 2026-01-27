@@ -1,0 +1,54 @@
+/* Dynamic Theme Styles for Tailwind Classes */
+
+/* Button colors that respond to theme */
+html.theme-blue .bg-blue-600 { background-color: #2563eb !important; }
+html.theme-blue .hover\:bg-blue-700:hover { background-color: #1d4ed8 !important; }
+html.theme-blue .text-blue-600 { color: #2563eb !important; }
+html.theme-blue .hover\:text-blue-600:hover { color: #1d4ed8 !important; }
+html.theme-blue .from-blue-600 { --tw-gradient-from: #2563eb !important; }
+html.theme-blue .to-indigo-600 { --tw-gradient-to: #4f46e5 !important; }
+
+html.theme-green .bg-blue-600 { background-color: #059669 !important; }
+html.theme-green .hover\:bg-blue-700:hover { background-color: #047857 !important; }
+html.theme-green .text-blue-600 { color: #059669 !important; }
+html.theme-green .hover\:text-blue-600:hover { color: #047857 !important; }
+html.theme-green .from-blue-600 { --tw-gradient-from: #059669 !important; }
+html.theme-green .to-indigo-600 { --tw-gradient-to: #10b981 !important; }
+
+html.theme-purple .bg-blue-600 { background-color: #9333ea !important; }
+html.theme-purple .hover\:bg-blue-700:hover { background-color: #7e22ce !important; }
+html.theme-purple .text-blue-600 { color: #9333ea !important; }
+html.theme-purple .hover\:text-blue-600:hover { color: #7e22ce !important; }
+html.theme-purple .from-blue-600 { --tw-gradient-from: #9333ea !important; }
+html.theme-purple .to-indigo-600 { --tw-gradient-to: #c084fc !important; }
+
+/* Sidebar colors */
+html.theme-blue .bg-slate-900 { background-color: rgba(30, 58, 138, 0.95) !important; }
+html.theme-blue .hover\:bg-slate-800:hover { background-color: rgba(15, 23, 42, 0.8) !important; }
+
+html.theme-green .bg-slate-900 { background-color: rgba(6, 95, 70, 0.95) !important; }
+html.theme-green .hover\:bg-slate-800:hover { background-color: rgba(15, 23, 42, 0.8) !important; }
+
+html.theme-purple .bg-slate-900 { background-color: rgba(88, 28, 135, 0.95) !important; }
+html.theme-purple .hover\:bg-slate-800:hover { background-color: rgba(15, 23, 42, 0.8) !important; }
+
+/* Ring/border colors */
+html.theme-blue .ring-blue-400,
+html.theme-blue .focus\:ring-blue-500:focus { border-color: #60a5fa !important; outline-color: #3b82f6 !important; }
+
+html.theme-green .ring-green-400,
+html.theme-green .focus\:ring-blue-500:focus { border-color: #4ade80 !important; outline-color: #10b981 !important; }
+
+html.theme-purple .ring-purple-400,
+html.theme-purple .focus\:ring-blue-500:focus { border-color: #d8b4fe !important; outline-color: #a855f7 !important; }
+
+/* Focus ring colors */
+html.theme-blue .focus\:ring-2:focus { outline-color: #2563eb !important; }
+html.theme-green .focus\:ring-2:focus { outline-color: #059669 !important; }
+html.theme-purple .focus\:ring-2:focus { outline-color: #9333ea !important; }
+
+/* Smooth transitions on theme change */
+html[data-theme],
+html[data-theme] * {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease !important;
+}
