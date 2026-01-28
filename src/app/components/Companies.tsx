@@ -35,7 +35,11 @@ import {
   ChevronUp,
   Tag,
   Settings,
-  List as ListIcon
+  List as ListIcon,
+  Download,
+  Upload,
+  FileDown,
+  Zap
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -96,6 +100,128 @@ const Companies = () => {
   const [newDynamicList, setNewDynamicList] = useState('');
   const [allTags, setAllTags] = useState(['Premium', 'VIP', 'Startup', 'Enterprise', 'PME', 'Secteur Public']);
   const [availableLists, setAvailableLists] = useState(['Clients Actifs', 'Prospects Chauds', 'À Relancer', 'En Négociation', 'Partenaires Clés']);
+
+  // Communication Modals States
+  const [showTemplatesModal, setShowTemplatesModal] = useState(false);
+  const [showEmailsModal, setShowEmailsModal] = useState(false);
+  const [showSMSModal, setShowSMSModal] = useState(false);
+  const [showFollowupModal, setShowFollowupModal] = useState(false);
+
+  // Templates Form with 3 sample entries
+  const [templates, setTemplates] = useState([
+    { id: '1', name: 'Bienvenue Client', category: 'email' as const, content: 'Bienvenue chez notre entreprise. Nous sommes heureux de travailler avec vous.' },
+    { id: '2', name: 'Suivi emails', category: 'email' as const, content: 'Bonjour, comment allez-vous? Puis-je vous aider avec nos services?' },
+    { id: '3', name: 'Promotion SMS', category: 'sms' as const, content: 'Découvrez notre nouvelle offre spéciale. Lien: [url]' }
+  ]);
+  const [newTemplate, setNewTemplate] = useState({ name: '', category: 'email' as const, content: '' });
+
+  // Email Campaign
+  const [emailCampaign, setEmailCampaign] = useState({
+    campaignName: '',
+    template: '',
+    subject: '',
+    recipients: 'all' as 'all' | 'selected',
+    scheduledDate: '',
+    scheduledTime: ''
+  });
+
+  // SMS Message
+  const [smsMessage, setSmsMessage] = useState({
+    message: '',
+    recipients: 'all' as 'all' | 'selected',
+    scheduledDate: '',
+    scheduledTime: ''
+  });
+
+  // Selected companies for campaigns
+  const [selectedEmailCompanies, setSelectedEmailCompanies] = useState<number[]>([]);
+  const [selectedSmsCompanies, setSelectedSmsCompanies] = useState<number[]>([]);
+
+  // Followup History
+  const [followupHistory, setFollowupHistory] = useState([
+    { id: '1', type: 'Email', subject: 'Premier contact', date: '2024-01-18', status: 'Envoyé' as const },
+    { id: '2', type: 'SMS', subject: 'Relance offre spéciale', date: '2024-01-19', status: 'Ouvert' as const },
+    { id: '3', type: 'Appel', subject: 'Discussion tarifs', date: '2024-01-20', status: 'Cliqué' as const }
+  ]);
+
+  // Import/Export States
+  const [showImportExportModal, setShowImportExportModal] = useState(false);
+  const [csvImportData, setCsvImportData] = useState('');
+  const [deduplicationStats, setDeduplicationStats] = useState({ duplicates: 0, merged: 0 });
+
+  // Export companies to CSV
+  const exportToCSV = () => {
+    const headers = ['Nom', 'Secteur', 'Chiffre d\'affaires', 'Salariés', 'Email', 'Téléphone', 'Site web', 'Adresse', 'Statut'];
+    const rows = companies.map(c => [
+      c.name,
+      c.industry,
+      c.revenue,
+      c.employees,
+      c.email,
+      c.phone,
+      c.website,
+      c.address,
+      c.status
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(cell => `"${cell}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `companies_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+  };
+
+  // Import from CSV
+  const importFromCSV = (csvText: string) => {
+    try {
+      const lines = csvText.trim().split('\n');
+      if (lines.length < 2) return;
+      const newCompanies = lines.slice(1).map((line, idx) => {
+        const values = line.split(',').map(v => v.replace(/"/g, '').trim());
+        return {
+          id: Math.max(...companies.map(c => c.id)) + idx + 1,
+          name: values[0],
+          industry: values[1],
+          revenue: values[2],
+          employees: values[3],
+          email: values[4],
+          phone: values[5],
+          website: values[6],
+          address: values[7],
+          status: (values[8] || 'prospect') as 'active' | 'prospect' | 'inactive',
+          contactPerson: '',
+          lastContact: new Date().toISOString().split('T')[0],
+          opportunities: 0,
+          quotes: 0,
+          invoices: 0,
+          projects: 0,
+          watchlist: false
+        };
+      });
+      setCompanies([...companies, ...newCompanies]);
+      setCsvImportData('');
+      setShowImportExportModal(false);
+    } catch (err) {
+      alert('Erreur lors de l\'import du CSV');
+    }
+  };
+
+  // Deduplication
+  const deduplicateCompanies = () => {
+    const seen = new Set();
+    const duplicates = companies.filter(c => {
+      const key = c.name.toLowerCase();
+      if (seen.has(key)) return true;
+      seen.add(key);
+      return false;
+    });
+    const merged = companies.filter(c => !duplicates.includes(c));
+    setCompanies(merged);
+    setDeduplicationStats({ duplicates: duplicates.length, merged: merged.length });
+    setTimeout(() => setShowImportExportModal(false), 2000);
+  };
+
   const [editForm, setEditForm] = useState({
     name: '',
     industry: '',
@@ -519,6 +645,482 @@ const Companies = () => {
         </div>
       </div>
 
+      {/* COMMUNICATION SECTION - GLOBAL */}
+      <div className="mb-6 bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-4">
+          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            📧 Communication Globale
+          </h2>
+        </div>
+        <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+          <button onClick={() => setShowTemplatesModal(true)} className="p-4 bg-blue-50 rounded-lg border-2 border-blue-200 hover:bg-blue-100 transition-all text-left group">
+            <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">Templates</h3>
+            <p className="text-xs text-gray-600 mt-2">Gérer vos modèles</p>
+          </button>
+          <button onClick={() => setShowEmailsModal(true)} className="p-4 bg-purple-50 rounded-lg border-2 border-purple-200 hover:bg-purple-100 transition-all text-left group">
+            <h3 className="font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">Emails masse</h3>
+            <p className="text-xs text-gray-600 mt-2">Campagnes d'emails</p>
+          </button>
+          <button onClick={() => setShowSMSModal(true)} className="p-4 bg-green-50 rounded-lg border-2 border-green-200 hover:bg-green-100 transition-all text-left group">
+            <h3 className="font-semibold text-gray-900 group-hover:text-green-600 transition-colors">SMS</h3>
+            <p className="text-xs text-gray-600 mt-2">Envoyer des SMS</p>
+          </button>
+          <button onClick={() => setShowFollowupModal(true)} className="p-4 bg-orange-50 rounded-lg border-2 border-orange-200 hover:bg-orange-100 transition-all text-left group">
+            <h3 className="font-semibold text-gray-900 group-hover:text-orange-600 transition-colors">Suivi</h3>
+            <p className="text-xs text-gray-600 mt-2">Historique complet</p>
+          </button>
+        </div>
+      </div>
+
+      {/* TEMPLATES MODAL */}
+      <Dialog open={showTemplatesModal} onOpenChange={setShowTemplatesModal}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Gestion des Templates</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            {/* Existing Templates */}
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-4">Templates existants</h3>
+              <div className="grid grid-cols-1 gap-3 mb-4">
+                {templates.map(template => (
+                  <div key={template.id} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h4 className="font-semibold text-gray-900">{template.name}</h4>
+                        <p className="text-xs text-gray-500 capitalize">Catégorie: {template.category}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">Éditer</button>
+                        <button className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors">Supprimer</button>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-600 line-clamp-2">{template.content}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Add New Template */}
+            <div className="border-t pt-6">
+              <h3 className="font-semibold text-gray-900 mb-4">Ajouter un template</h3>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="template-name">Nom du template</Label>
+                  <Input
+                    id="template-name"
+                    placeholder="Ex: Bienvenue client"
+                    value={newTemplate.name}
+                    onChange={(e) => setNewTemplate({...newTemplate, name: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="template-category">Catégorie</Label>
+                  <select
+                    id="template-category"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    value={newTemplate.category}
+                    onChange={(e) => setNewTemplate({...newTemplate, category: e.target.value as 'email' | 'sms'})}
+                  >
+                    <option value="email">Email</option>
+                    <option value="sms">SMS</option>
+                  </select>
+                </div>
+                <div>
+                  <Label htmlFor="template-content">Contenu</Label>
+                  <textarea
+                    id="template-content"
+                    placeholder="Écrivez le contenu de votre template..."
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm"
+                    value={newTemplate.content}
+                    onChange={(e) => setNewTemplate({...newTemplate, content: e.target.value})}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button className="bg-green-600 hover:bg-green-700 text-white">Ajouter le template</Button>
+                  <Button variant="outline">Annuler</Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* EMAIL CAMPAIGN MODAL */}
+      <Dialog open={showEmailsModal} onOpenChange={setShowEmailsModal}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Créer une campagne email</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-5">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="campaign-name">Nom de la campagne</Label>
+                <Input
+                  id="campaign-name"
+                  placeholder="Ex: Promo Juin 2024"
+                  value={emailCampaign.campaignName}
+                  onChange={(e) => setEmailCampaign({...emailCampaign, campaignName: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="template-select">Sélectionner un template</Label>
+                <select
+                  id="template-select"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  value={emailCampaign.template}
+                  onChange={(e) => setEmailCampaign({...emailCampaign, template: e.target.value})}
+                >
+                  <option value="">-- Choisir un template --</option>
+                  {templates.filter(t => t.category === 'email').map(t => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="email-subject">Sujet de l'email</Label>
+              <Input
+                id="email-subject"
+                placeholder="Sujet de votre email"
+                value={emailCampaign.subject}
+                onChange={(e) => setEmailCampaign({...emailCampaign, subject: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <Label>Destinataires</Label>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={emailCampaign.recipients === 'all'}
+                    onChange={() => setEmailCampaign({...emailCampaign, recipients: 'all'})}
+                  />
+                  <span className="text-sm">Toutes les entreprises ({companies.length})</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={emailCampaign.recipients === 'selected'}
+                    onChange={() => setEmailCampaign({...emailCampaign, recipients: 'selected'})}
+                  />
+                  <span className="text-sm">Entreprises sélectionnées ({selectedEmailCompanies.length})</span>
+                </label>
+              </div>
+
+              {emailCampaign.recipients === 'selected' && (
+                <div className="mt-4 border border-gray-300 rounded-lg p-3 max-h-48 overflow-y-auto bg-gray-50">
+                  <p className="text-xs font-semibold text-gray-700 mb-2">Sélectionner les entreprises :</p>
+                  <div className="space-y-2">
+                    {companies.map(company => (
+                      <label key={company.id} className="flex items-center gap-2 cursor-pointer hover:bg-white p-2 rounded">
+                        <input
+                          type="checkbox"
+                          checked={selectedEmailCompanies.includes(company.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedEmailCompanies([...selectedEmailCompanies, company.id]);
+                            } else {
+                              setSelectedEmailCompanies(selectedEmailCompanies.filter(id => id !== company.id));
+                            }
+                          }}
+                          className="rounded"
+                        />
+                        <span className="text-sm font-medium text-gray-700">{company.name}</span>
+                        <span className="text-xs text-gray-500">({company.email})</span>
+                      </label>
+                    ))}
+                  </div>
+                  {companies.length === 0 && (
+                    <p className="text-xs text-gray-500 italic">Aucune entreprise disponible</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="email-date">Date d'envoi</Label>
+                <Input
+                  id="email-date"
+                  type="date"
+                  value={emailCampaign.scheduledDate}
+                  onChange={(e) => setEmailCampaign({...emailCampaign, scheduledDate: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="email-time">Heure d'envoi</Label>
+                <Input
+                  id="email-time"
+                  type="time"
+                  value={emailCampaign.scheduledTime}
+                  onChange={(e) => setEmailCampaign({...emailCampaign, scheduledTime: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <p className="text-xs text-gray-600 mb-2 font-semibold">Aperçu</p>
+              <p className="text-sm font-semibold">{emailCampaign.subject || '(Aucun sujet)'}</p>
+              <p className="text-xs text-gray-500 mt-1">Envoi le: {emailCampaign.scheduledDate} à {emailCampaign.scheduledTime || '(Pas d\'heure définie)'}</p>
+            </div>
+
+            <div className="flex gap-2 justify-end pt-4 border-t">
+              <Button variant="outline" onClick={() => setShowEmailsModal(false)}>Annuler</Button>
+              <Button className="bg-purple-600 hover:bg-purple-700 text-white">Planifier la campagne</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* SMS MODAL */}
+      <Dialog open={showSMSModal} onOpenChange={setShowSMSModal}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Envoyer un SMS</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-5">
+            <div>
+              <Label htmlFor="sms-message">Message SMS</Label>
+              <textarea
+                id="sms-message"
+                placeholder="Écrivez votre message SMS (160 caractères max pour une partie)"
+                rows={4}
+                maxLength={160}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm resize-none"
+                value={smsMessage.message}
+                onChange={(e) => setSmsMessage({...smsMessage, message: e.target.value})}
+              />
+              <div className="text-xs text-gray-500 mt-1">
+                {smsMessage.message.length} / 160 caractères
+                {smsMessage.message.length > 160 && ` (${Math.ceil(smsMessage.message.length / 160)} SMS)`}
+              </div>
+            </div>
+
+            <div>
+              <Label>Destinataires</Label>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={smsMessage.recipients === 'all'}
+                    onChange={() => setSmsMessage({...smsMessage, recipients: 'all'})}
+                  />
+                  <span className="text-sm">Toutes les entreprises ({companies.length})</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={smsMessage.recipients === 'selected'}
+                    onChange={() => setSmsMessage({...smsMessage, recipients: 'selected'})}
+                  />
+                  <span className="text-sm">Entreprises sélectionnées ({selectedSmsCompanies.length})</span>
+                </label>
+              </div>
+
+              {smsMessage.recipients === 'selected' && (
+                <div className="mt-4 border border-gray-300 rounded-lg p-3 max-h-48 overflow-y-auto bg-gray-50">
+                  <p className="text-xs font-semibold text-gray-700 mb-2">Sélectionner les entreprises :</p>
+                  <div className="space-y-2">
+                    {companies.map(company => (
+                      <label key={company.id} className="flex items-center gap-2 cursor-pointer hover:bg-white p-2 rounded">
+                        <input
+                          type="checkbox"
+                          checked={selectedSmsCompanies.includes(company.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedSmsCompanies([...selectedSmsCompanies, company.id]);
+                            } else {
+                              setSelectedSmsCompanies(selectedSmsCompanies.filter(id => id !== company.id));
+                            }
+                          }}
+                          className="rounded"
+                        />
+                        <span className="text-sm font-medium text-gray-700">{company.name}</span>
+                        <span className="text-xs text-gray-500">({company.phone})</span>
+                      </label>
+                    ))}
+                  </div>
+                  {companies.length === 0 && (
+                    <p className="text-xs text-gray-500 italic">Aucune entreprise disponible</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="sms-date">Date d'envoi</Label>
+                <Input
+                  id="sms-date"
+                  type="date"
+                  value={smsMessage.scheduledDate}
+                  onChange={(e) => setSmsMessage({...smsMessage, scheduledDate: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="sms-time">Heure d'envoi</Label>
+                <Input
+                  id="sms-time"
+                  type="time"
+                  value={smsMessage.scheduledTime}
+                  onChange={(e) => setSmsMessage({...smsMessage, scheduledTime: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end pt-4 border-t">
+              <Button variant="outline" onClick={() => setShowSMSModal(false)}>Annuler</Button>
+              <Button className="bg-green-600 hover:bg-green-700 text-white">Envoyer le SMS</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* IMPORT/EXPORT MODAL */}
+      <Dialog open={showImportExportModal} onOpenChange={setShowImportExportModal}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Import / Export / Dédoublonnage</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            {/* Import CSV Section */}
+            <div className="border-b pb-6">
+              <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <Upload className="h-5 w-5 text-blue-600" />
+                Importer un CSV
+              </h3>
+              <div className="space-y-3">
+                <p className="text-sm text-gray-600">Format attendu: Nom, Secteur, Chiffre d'affaires, Salariés, Email, Téléphone, Site web, Adresse, Statut</p>
+                <textarea
+                  placeholder="Collez votre contenu CSV ici..."
+                  rows={6}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-xs"
+                  value={csvImportData}
+                  onChange={(e) => setCsvImportData(e.target.value)}
+                />
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => importFromCSV(csvImportData)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Importer
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => setCsvImportData('')}
+                  >
+                    Effacer
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Export CSV Section */}
+            <div className="border-b pb-6">
+              <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <FileDown className="h-5 w-5 text-green-600" />
+                Exporter en CSV
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">Exportez toutes vos {companies.length} entreprises au format CSV</p>
+              <Button 
+                onClick={exportToCSV}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                <FileDown className="h-4 w-4 mr-2" />
+                Télécharger CSV
+              </Button>
+            </div>
+
+            {/* Deduplication Section */}
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <Zap className="h-5 w-5 text-orange-600" />
+                Dédoublonnage
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">Détecte et supprime les entreprises en doublon basé sur le nom</p>
+              {deduplicationStats.duplicates > 0 ? (
+                <div className="bg-green-50 p-4 rounded-lg border border-green-200 mb-4">
+                  <p className="text-sm font-semibold text-green-800">✓ Dédoublonnage effectué!</p>
+                  <p className="text-sm text-green-700 mt-1">{deduplicationStats.duplicates} doublon(s) supprimé(s)</p>
+                  <p className="text-sm text-green-700">{deduplicationStats.merged} entreprise(s) conservée(s)</p>
+                </div>
+              ) : (
+                <Button 
+                  onClick={deduplicateCompanies}
+                  className="bg-orange-600 hover:bg-orange-700 text-white"
+                >
+                  <Zap className="h-4 w-4 mr-2" />
+                  Lancer le dédoublonnage
+                </Button>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* FOLLOWUP HISTORY MODAL */}
+      <Dialog open={showFollowupModal} onOpenChange={setShowFollowupModal}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Historique des interactions</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-100 border-b">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-semibold">Type</th>
+                    <th className="px-4 py-3 text-left font-semibold">Sujet</th>
+                    <th className="px-4 py-3 text-left font-semibold">Date</th>
+                    <th className="px-4 py-3 text-left font-semibold">Statut</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {followupHistory.map(interaction => (
+                    <tr key={interaction.id} className="border-b hover:bg-gray-50">
+                      <td className="px-4 py-3">
+                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold text-white ${
+                          interaction.type === 'Email' ? 'bg-blue-500' :
+                          interaction.type === 'SMS' ? 'bg-green-500' :
+                          interaction.type === 'Appel' ? 'bg-red-500' :
+                          'bg-purple-500'
+                        }`}>
+                          {interaction.type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 font-medium text-gray-900">{interaction.subject}</td>
+                      <td className="px-4 py-3 text-gray-600">{interaction.date}</td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-block px-3 py-1 rounded text-xs font-semibold ${
+                          interaction.status === 'Envoyé' ? 'bg-yellow-100 text-yellow-800' :
+                          interaction.status === 'Ouvert' ? 'bg-green-100 text-green-800' :
+                          'bg-blue-100 text-blue-800'
+                        }`}>
+                          {interaction.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {followupHistory.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                Aucune interaction enregistrée
+              </div>
+            )}
+            <div className="flex justify-end pt-4 border-t">
+              <Button variant="outline" onClick={() => setShowFollowupModal(false)}>Fermer</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* SEGMENTATION SECTION */}
       <div className="mb-6">
         <button
@@ -798,6 +1400,30 @@ const Companies = () => {
           >
             <Kanban className="h-4 w-4" />
           </button>
+
+          {/* Import/Export Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-all flex items-center gap-2 text-gray-700 font-medium">
+                <Download className="h-4 w-4" />
+                Import/Export
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setShowImportExportModal(true)} className="flex items-center gap-2">
+                <Upload className="h-4 w-4" />
+                <span>Import CSV</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportToCSV} className="flex items-center gap-2">
+                <FileDown className="h-4 w-4" />
+                <span>Export CSV</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowImportExportModal(true)} className="flex items-center gap-2">
+                <Zap className="h-4 w-4" />
+                <span>Dédoublonnage</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
