@@ -54,7 +54,21 @@ import {
   MessageSquare,
   History,
   AlertCircle,
-  CheckCheck
+  CheckCheck,
+  Mail,
+  Eye as EyeIcon,
+  RotateCcw,
+  FileSignature,
+  AlertTriangle,
+  CheckSquare,
+  Phone,
+  Check,
+  BarChart3,
+  TrendingUpIcon,
+  Clock as ClockIcon,
+  DollarSignIcon,
+  Target,
+  Percent
 } from 'lucide-react';
 
 import Catalogue from '@/app/components/Catalogue';
@@ -104,6 +118,89 @@ interface WorkflowComment {
   avatar?: string;
 }
 
+interface QuoteStatus {
+  id: number;
+  status: 'draft' | 'sent' | 'opened' | 'accepted' | 'rejected' | 'expired';
+  label: string;
+  date: string;
+  description: string;
+}
+
+interface EmailTracking {
+  id: number;
+  recipient: string;
+  subject: string;
+  sentDate: string;
+  status: 'pending' | 'sent' | 'bounced' | 'failed';
+  opens: number;
+  clicks: number;
+}
+
+interface OpeningTracking {
+  id: number;
+  openedAt: string;
+  clientIP?: string;
+  deviceInfo?: string;
+}
+
+interface FollowUpReminder {
+  id: number;
+  type: 'email' | 'phone' | 'meeting';
+  status: 'pending' | 'completed' | 'cancelled';
+  scheduledDate: string;
+  completedDate?: string;
+  notes?: string;
+  contactName?: string;
+}
+
+interface ESignature {
+  id: number;
+  status: 'pending' | 'signed' | 'rejected' | 'expired';
+  signerName: string;
+  signerEmail: string;
+  requestDate: string;
+  signedDate?: string;
+  documentUrl?: string;
+}
+
+interface QuoteTracking {
+  statuses?: QuoteStatus[];
+  emailTracking?: EmailTracking[];
+  openings?: OpeningTracking[];
+  followUps?: FollowUpReminder[];
+  eSignatures?: ESignature[];
+}
+
+interface ConversionRate {
+  period: string;
+  sent: number;
+  accepted: number;
+  rate: number;
+}
+
+interface SignatureDelay {
+  period: string;
+  avgDays: number;
+  minDays: number;
+  maxDays: number;
+  totalSigned: number;
+}
+
+interface AverageAmount {
+  period: string;
+  avgAmount: number;
+  minAmount: number;
+  maxAmount: number;
+  totalQuotes: number;
+  totalValue: number;
+}
+
+interface QuoteAnalytics {
+  conversionRates?: ConversionRate[];
+  signatureDelays?: SignatureDelay[];
+  averageAmounts?: AverageAmount[];
+}
+
 interface Quote {
   id: number;
   quoteNumber: string;
@@ -127,6 +224,8 @@ interface Quote {
   notifications?: WorkflowNotification[];
   history?: WorkflowHistory[];
   comments?: WorkflowComment[];
+  tracking?: QuoteTracking;
+  analytics?: QuoteAnalytics;
 }
 
 const Quotes = () => {
@@ -162,7 +261,44 @@ const Quotes = () => {
       ],
       comments: [
         { id: 1, author: 'Pierre Moreau', content: 'Montant correct, tous les éléments sont en place.', date: '2026-01-21' }
-      ]
+      ],
+      tracking: {
+        statuses: [
+          { id: 1, status: 'draft', label: 'Brouillon', date: '2026-01-20', description: 'Devis créé' },
+          { id: 2, status: 'sent', label: 'Envoyé', date: '2026-01-21', description: 'Devis envoyé au client' },
+          { id: 3, status: 'opened', label: 'Ouvert', date: '2026-01-21', description: 'Client a ouvert le devis' }
+        ],
+        emailTracking: [
+          { id: 1, recipient: 'marie.dupont@acme.fr', subject: 'Votre devis DEVIS-2026-001', sentDate: '2026-01-21', status: 'sent', opens: 2, clicks: 1 }
+        ],
+        openings: [
+          { id: 1, openedAt: '2026-01-21 14:32', clientIP: '192.168.1.100', deviceInfo: 'Chrome on Windows' },
+          { id: 2, openedAt: '2026-01-21 15:45', clientIP: '192.168.1.100', deviceInfo: 'Safari on iPhone' }
+        ],
+        followUps: [
+          { id: 1, type: 'email', status: 'completed', scheduledDate: '2026-01-23', completedDate: '2026-01-23', notes: 'Relance envoyée - En attente de réponse', contactName: 'Marie Dupont' }
+        ],
+        eSignatures: [
+          { id: 1, status: 'pending', signerName: 'Marie Dupont', signerEmail: 'marie.dupont@acme.fr', requestDate: '2026-01-21' }
+        ]
+      },
+      analytics: {
+        conversionRates: [
+          { period: 'Janvier 2026', sent: 15, accepted: 12, rate: 80 },
+          { period: 'Décembre 2025', sent: 18, accepted: 14, rate: 78 },
+          { period: 'Novembre 2025', sent: 12, accepted: 9, rate: 75 }
+        ],
+        signatureDelays: [
+          { period: 'Janvier 2026', avgDays: 2, minDays: 1, maxDays: 5, totalSigned: 12 },
+          { period: 'Décembre 2025', avgDays: 3, minDays: 1, maxDays: 7, totalSigned: 14 },
+          { period: 'Novembre 2025', avgDays: 2.5, minDays: 1, maxDays: 6, totalSigned: 9 }
+        ],
+        averageAmounts: [
+          { period: 'Janvier 2026', avgAmount: 14500, minAmount: 5000, maxAmount: 25000, totalQuotes: 15, totalValue: 217500 },
+          { period: 'Décembre 2025', avgAmount: 13800, minAmount: 4500, maxAmount: 22000, totalQuotes: 18, totalValue: 248400 },
+          { period: 'Novembre 2025', avgAmount: 12000, minAmount: 3000, maxAmount: 20000, totalQuotes: 12, totalValue: 144000 }
+        ]
+      }
     },
     {
       id: 2,
@@ -197,7 +333,46 @@ const Quotes = () => {
       comments: [
         { id: 1, author: 'Pierre Moreau', content: 'Projet intéressant, bon prix.', date: '2026-01-20' },
         { id: 2, author: 'Françoise Martin', content: 'Approuvé. Commencer les développements.', date: '2026-01-21' }
-      ]
+      ],
+      tracking: {
+        statuses: [
+          { id: 1, status: 'draft', label: 'Brouillon', date: '2026-01-19', description: 'Devis créé' },
+          { id: 2, status: 'sent', label: 'Envoyé', date: '2026-01-20', description: 'Devis envoyé au client' },
+          { id: 3, status: 'opened', label: 'Ouvert', date: '2026-01-20', description: 'Client a ouvert le devis' },
+          { id: 4, status: 'accepted', label: 'Accepté', date: '2026-01-21', description: 'Devis accepté par le client' }
+        ],
+        emailTracking: [
+          { id: 1, recipient: 'jean.martin@techstart.fr', subject: 'Votre devis DEVIS-2026-002', sentDate: '2026-01-20', status: 'sent', opens: 3, clicks: 2 }
+        ],
+        openings: [
+          { id: 1, openedAt: '2026-01-20 10:15', clientIP: '192.168.2.100', deviceInfo: 'Chrome on Windows' },
+          { id: 2, openedAt: '2026-01-20 14:30', clientIP: '192.168.2.100', deviceInfo: 'Chrome on Windows' },
+          { id: 3, openedAt: '2026-01-21 09:00', clientIP: '192.168.2.100', deviceInfo: 'Firefox on Linux' }
+        ],
+        followUps: [
+          { id: 1, type: 'email', status: 'completed', scheduledDate: '2026-01-23', completedDate: '2026-01-21', notes: 'Client confirme l\'acceptation', contactName: 'Jean Martin' }
+        ],
+        eSignatures: [
+          { id: 1, status: 'signed', signerName: 'Jean Martin', signerEmail: 'jean.martin@techstart.fr', requestDate: '2026-01-20', signedDate: '2026-01-21', documentUrl: '/docs/signed-devis-2026-002.pdf' }
+        ]
+      },
+      analytics: {
+        conversionRates: [
+          { period: 'Janvier 2026', sent: 15, accepted: 12, rate: 80 },
+          { period: 'Décembre 2025', sent: 18, accepted: 14, rate: 78 },
+          { period: 'Novembre 2025', sent: 12, accepted: 9, rate: 75 }
+        ],
+        signatureDelays: [
+          { period: 'Janvier 2026', avgDays: 2, minDays: 1, maxDays: 5, totalSigned: 12 },
+          { period: 'Décembre 2025', avgDays: 3, minDays: 1, maxDays: 7, totalSigned: 14 },
+          { period: 'Novembre 2025', avgDays: 2.5, minDays: 1, maxDays: 6, totalSigned: 9 }
+        ],
+        averageAmounts: [
+          { period: 'Janvier 2026', avgAmount: 14500, minAmount: 5000, maxAmount: 25000, totalQuotes: 15, totalValue: 217500 },
+          { period: 'Décembre 2025', avgAmount: 13800, minAmount: 4500, maxAmount: 22000, totalQuotes: 18, totalValue: 248400 },
+          { period: 'Novembre 2025', avgAmount: 12000, minAmount: 3000, maxAmount: 20000, totalQuotes: 12, totalValue: 144000 }
+        ]
+      }
     },
     {
       id: 3,
@@ -222,7 +397,35 @@ const Quotes = () => {
       history: [
         { id: 1, action: 'Devis créé', user: 'Admin', date: '2026-01-18' }
       ],
-      comments: []
+      comments: [],
+      tracking: {
+        statuses: [
+          { id: 1, status: 'draft', label: 'Brouillon', date: '2026-01-18', description: 'Devis en cours de rédaction' }
+        ],
+        emailTracking: [],
+        openings: [],
+        followUps: [
+          { id: 1, type: 'email', status: 'pending', scheduledDate: '2026-01-30', notes: 'Relance prévue', contactName: 'Sophie Bernard' }
+        ],
+        eSignatures: []
+      },
+      analytics: {
+        conversionRates: [
+          { period: 'Janvier 2026', sent: 15, accepted: 12, rate: 80 },
+          { period: 'Décembre 2025', sent: 18, accepted: 14, rate: 78 },
+          { period: 'Novembre 2025', sent: 12, accepted: 9, rate: 75 }
+        ],
+        signatureDelays: [
+          { period: 'Janvier 2026', avgDays: 2, minDays: 1, maxDays: 5, totalSigned: 12 },
+          { period: 'Décembre 2025', avgDays: 3, minDays: 1, maxDays: 7, totalSigned: 14 },
+          { period: 'Novembre 2025', avgDays: 2.5, minDays: 1, maxDays: 6, totalSigned: 9 }
+        ],
+        averageAmounts: [
+          { period: 'Janvier 2026', avgAmount: 14500, minAmount: 5000, maxAmount: 25000, totalQuotes: 15, totalValue: 217500 },
+          { period: 'Décembre 2025', avgAmount: 13800, minAmount: 4500, maxAmount: 22000, totalQuotes: 18, totalValue: 248400 },
+          { period: 'Novembre 2025', avgAmount: 12000, minAmount: 3000, maxAmount: 20000, totalQuotes: 12, totalValue: 144000 }
+        ]
+      }
     }
   ]);
 
@@ -258,8 +461,26 @@ const Quotes = () => {
   const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string>('');
   const [showPDFSettings, setShowPDFSettings] = useState(false);
+  const [showGlobalAnalytics, setShowGlobalAnalytics] = useState(false);
   const [newWorkflowComment, setNewWorkflowComment] = useState('');
   const [workflowTab, setWorkflowTab] = useState<'approvals' | 'notifications' | 'history' | 'comments'>('approvals');
+  
+  // États pour le suivi
+  const [showTrackingPanel, setShowTrackingPanel] = useState(false);
+  const [trackingTab, setTrackingTab] = useState<'statuses' | 'email' | 'openings' | 'followups' | 'signatures'>('statuses');
+  const [newFollowUp, setNewFollowUp] = useState({
+    type: 'email' as 'email' | 'phone' | 'meeting',
+    scheduledDate: new Date().toISOString().split('T')[0],
+    notes: '',
+    contactName: ''
+  });
+  const [newSignatureRequest, setNewSignatureRequest] = useState({
+    signerName: '',
+    signerEmail: ''
+  });
+  const [showNewFollowUp, setShowNewFollowUp] = useState(false);
+  const [showNewSignature, setShowNewSignature] = useState(false);
+  const [analyticsTab, setAnalyticsTab] = useState<'conversion' | 'signature' | 'amounts'>('conversion');
 
   useEffect(() => {
     setCatalog(catalogService.getCatalog());
@@ -539,6 +760,108 @@ const Quotes = () => {
     }
   };
 
+  // Handlers pour le suivi
+  const handleAddFollowUp = () => {
+    if (selectedQuote && newFollowUp.scheduledDate && newFollowUp.notes) {
+      setQuotes(quotes.map(q => {
+        if (q.id === selectedQuote.id) {
+          const updatedTracking = { ...q.tracking };
+          if (!updatedTracking.followUps) {
+            updatedTracking.followUps = [];
+          }
+          updatedTracking.followUps.push({
+            id: Math.max(...updatedTracking.followUps.map(f => f.id), 0) + 1,
+            type: newFollowUp.type,
+            status: 'pending',
+            scheduledDate: newFollowUp.scheduledDate,
+            notes: newFollowUp.notes,
+            contactName: newFollowUp.contactName || q.contact
+          });
+          setSelectedQuote({ ...q, tracking: updatedTracking });
+          return { ...q, tracking: updatedTracking };
+        }
+        return q;
+      }));
+      setShowNewFollowUp(false);
+      setNewFollowUp({
+        type: 'email',
+        scheduledDate: new Date().toISOString().split('T')[0],
+        notes: '',
+        contactName: ''
+      });
+    }
+  };
+
+  const handleAddSignatureRequest = () => {
+    if (selectedQuote && newSignatureRequest.signerName && newSignatureRequest.signerEmail) {
+      setQuotes(quotes.map(q => {
+        if (q.id === selectedQuote.id) {
+          const updatedTracking = { ...q.tracking };
+          if (!updatedTracking.eSignatures) {
+            updatedTracking.eSignatures = [];
+          }
+          updatedTracking.eSignatures.push({
+            id: Math.max(...updatedTracking.eSignatures.map(s => s.id), 0) + 1,
+            status: 'pending',
+            signerName: newSignatureRequest.signerName,
+            signerEmail: newSignatureRequest.signerEmail,
+            requestDate: new Date().toISOString().split('T')[0]
+          });
+          setSelectedQuote({ ...q, tracking: updatedTracking });
+          return { ...q, tracking: updatedTracking };
+        }
+        return q;
+      }));
+      setShowNewSignature(false);
+      setNewSignatureRequest({ signerName: '', signerEmail: '' });
+    }
+  };
+
+  const handleCompleteFollowUp = (followUpId: number) => {
+    if (selectedQuote) {
+      setQuotes(quotes.map(q => {
+        if (q.id === selectedQuote.id) {
+          const updatedTracking = { ...q.tracking };
+          if (updatedTracking.followUps) {
+            updatedTracking.followUps = updatedTracking.followUps.map(f =>
+              f.id === followUpId
+                ? { ...f, status: 'completed', completedDate: new Date().toISOString().split('T')[0] }
+                : f
+            );
+          }
+          setSelectedQuote({ ...q, tracking: updatedTracking });
+          return { ...q, tracking: updatedTracking };
+        }
+        return q;
+      }));
+    }
+  };
+
+  const handleUpdateSignatureStatus = (signatureId: number, newStatus: 'signed' | 'rejected' | 'expired') => {
+    if (selectedQuote) {
+      setQuotes(quotes.map(q => {
+        if (q.id === selectedQuote.id) {
+          const updatedTracking = { ...q.tracking };
+          if (updatedTracking.eSignatures) {
+            updatedTracking.eSignatures = updatedTracking.eSignatures.map(s =>
+              s.id === signatureId
+                ? {
+                  ...s,
+                  status: newStatus,
+                  signedDate: newStatus === 'signed' ? new Date().toISOString().split('T')[0] : s.signedDate,
+                  documentUrl: newStatus === 'signed' ? `/docs/signed-${selectedQuote.quoteNumber}.pdf` : s.documentUrl
+                }
+                : s
+            );
+          }
+          setSelectedQuote({ ...q, tracking: updatedTracking });
+          return { ...q, tracking: updatedTracking };
+        }
+        return q;
+      }));
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 p-4 md:p-8">
       {/* Header */}
@@ -554,6 +877,14 @@ const Quotes = () => {
             <p className="text-gray-600 mt-2">Création et gestion des devis commerciaux</p>
           </div>
           <div className="flex items-center gap-3">
+            <Button
+              onClick={() => setShowGlobalAnalytics(true)}
+              variant="outline"
+              className="flex items-center gap-2 border-2 border-purple-600 text-purple-600 hover:bg-purple-50"
+            >
+              <BarChart3 className="h-4 w-4" />
+              Analytics
+            </Button>
             <Button
               onClick={() => setShowPDFSettings(true)}
               variant="outline"
@@ -1294,9 +1625,10 @@ const Quotes = () => {
               </div>
             ) : (
               <Tabs defaultValue="informations" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="informations">Informations</TabsTrigger>
                   <TabsTrigger value="workflow">Workflow</TabsTrigger>
+                  <TabsTrigger value="suivi">Suivi</TabsTrigger>
                 </TabsList>
 
                 {/* TAB INFORMATIONS */}
@@ -1645,6 +1977,278 @@ const Quotes = () => {
                           ))
                         ) : (
                           <p className="text-center text-gray-500 text-sm py-4">Aucun commentaire</p>
+                        )}
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                </TabsContent>
+
+                {/* TAB SUIVI */}
+                <TabsContent value="suivi" className="mt-4">
+                  <Tabs defaultValue="statuses" value={trackingTab} onValueChange={setTrackingTab} className="w-full">
+                    <TabsList className="grid w-full grid-cols-5">
+                      <TabsTrigger value="statuses" className="text-xs">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Statuts
+                      </TabsTrigger>
+                      <TabsTrigger value="email" className="text-xs">
+                        <Mail className="h-3 w-3 mr-1" />
+                        Emails
+                      </TabsTrigger>
+                      <TabsTrigger value="openings" className="text-xs">
+                        <EyeIcon className="h-3 w-3 mr-1" />
+                        Ouvertures
+                      </TabsTrigger>
+                      <TabsTrigger value="followups" className="text-xs">
+                        <RotateCcw className="h-3 w-3 mr-1" />
+                        Relances
+                      </TabsTrigger>
+                      <TabsTrigger value="signatures" className="text-xs">
+                        <FileSignature className="h-3 w-3 mr-1" />
+                        Signature
+                      </TabsTrigger>
+                    </TabsList>
+
+                    {/* SOUS-TAB STATUTS */}
+                    <TabsContent value="statuses" className="space-y-4 mt-4">
+                      <div className="space-y-3">
+                        {selectedQuote.tracking?.statuses && selectedQuote.tracking.statuses.length > 0 ? (
+                          selectedQuote.tracking.statuses.map((status) => (
+                            <div key={status.id} className="border rounded-lg p-4 bg-gradient-to-r from-blue-50 to-cyan-50">
+                              <div className="flex items-start gap-3">
+                                <div className="pt-1">
+                                  {status.status === 'draft' && <AlertCircle className="h-5 w-5 text-gray-400" />}
+                                  {status.status === 'sent' && <Send className="h-5 w-5 text-blue-500" />}
+                                  {status.status === 'opened' && <Eye className="h-5 w-5 text-green-500" />}
+                                  {status.status === 'accepted' && <CheckCircle className="h-5 w-5 text-green-600" />}
+                                  {status.status === 'rejected' && <XCircle className="h-5 w-5 text-red-500" />}
+                                  {status.status === 'expired' && <Clock className="h-5 w-5 text-orange-500" />}
+                                </div>
+                                <div className="flex-1">
+                                  <p className="font-semibold text-gray-900">{status.label}</p>
+                                  <p className="text-sm text-gray-600">{status.description}</p>
+                                  <p className="text-xs text-gray-500 mt-1">{new Date(status.date).toLocaleDateString('fr-FR')}</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-8 text-gray-500">
+                            <AlertCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                            <p>Aucun statut pour ce devis</p>
+                          </div>
+                        )}
+                      </div>
+                    </TabsContent>
+
+                    {/* SOUS-TAB EMAILS */}
+                    <TabsContent value="email" className="space-y-4 mt-4">
+                      <div className="space-y-3">
+                        {selectedQuote.tracking?.emailTracking && selectedQuote.tracking.emailTracking.length > 0 ? (
+                          selectedQuote.tracking.emailTracking.map((email) => (
+                            <div key={email.id} className="border rounded-lg p-4 bg-white">
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1">
+                                  <p className="font-semibold text-gray-900 flex items-center gap-2">
+                                    <Mail className="h-4 w-4 text-blue-500" />
+                                    {email.subject}
+                                  </p>
+                                  <p className="text-sm text-gray-600">{email.recipient}</p>
+                                </div>
+                                <Badge variant={email.status === 'sent' ? 'default' : email.status === 'bounced' ? 'destructive' : 'secondary'}>
+                                  {email.status}
+                                </Badge>
+                              </div>
+                              <div className="grid grid-cols-3 gap-2 text-sm bg-gray-50 p-2 rounded">
+                                <div>
+                                  <p className="text-gray-600">Envoyé</p>
+                                  <p className="font-semibold">{new Date(email.sentDate).toLocaleDateString('fr-FR')}</p>
+                                </div>
+                                <div>
+                                  <p className="text-gray-600">Ouvertures</p>
+                                  <p className="font-semibold">{email.opens}</p>
+                                </div>
+                                <div>
+                                  <p className="text-gray-600">Clics</p>
+                                  <p className="font-semibold">{email.clicks}</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-8 text-gray-500">
+                            <Mail className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                            <p>Aucun email envoyé</p>
+                          </div>
+                        )}
+                      </div>
+                    </TabsContent>
+
+                    {/* SOUS-TAB OUVERTURES */}
+                    <TabsContent value="openings" className="space-y-4 mt-4">
+                      <div className="space-y-3">
+                        {selectedQuote.tracking?.openings && selectedQuote.tracking.openings.length > 0 ? (
+                          selectedQuote.tracking.openings.map((opening, idx) => (
+                            <div key={opening.id || idx} className="border rounded-lg p-4 bg-white">
+                              <div className="flex items-start gap-3">
+                                <Eye className="h-5 w-5 text-green-500 mt-1" />
+                                <div className="flex-1">
+                                  <p className="font-semibold text-gray-900">Ouverture #{idx + 1}</p>
+                                  <p className="text-sm text-gray-600">{new Date(opening.openedAt).toLocaleString('fr-FR')}</p>
+                                  {opening.deviceInfo && (
+                                    <p className="text-sm text-gray-500 mt-2">Appareil: {opening.deviceInfo}</p>
+                                  )}
+                                  {opening.clientIP && (
+                                    <p className="text-sm text-gray-500">IP: {opening.clientIP}</p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-8 text-gray-500">
+                            <Eye className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                            <p>Aucune ouverture détectée</p>
+                          </div>
+                        )}
+                      </div>
+                    </TabsContent>
+
+                    {/* SOUS-TAB RELANCES */}
+                    <TabsContent value="followups" className="space-y-4 mt-4">
+                      <div className="flex gap-2 mb-4">
+                        <Button
+                          onClick={() => setShowNewFollowUp(true)}
+                          className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700"
+                          size="sm"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Ajouter une relance
+                        </Button>
+                      </div>
+
+                      <div className="space-y-3">
+                        {selectedQuote.tracking?.followUps && selectedQuote.tracking.followUps.length > 0 ? (
+                          selectedQuote.tracking.followUps.map((followUp) => (
+                            <div key={followUp.id} className="border rounded-lg p-4 bg-white">
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1">
+                                  <p className="font-semibold text-gray-900 flex items-center gap-2">
+                                    {followUp.type === 'email' && <Mail className="h-4 w-4 text-blue-500" />}
+                                    {followUp.type === 'phone' && <Phone className="h-4 w-4 text-green-500" />}
+                                    {followUp.type === 'meeting' && <Calendar className="h-4 w-4 text-purple-500" />}
+                                    {followUp.type.charAt(0).toUpperCase() + followUp.type.slice(1)}
+                                  </p>
+                                  <p className="text-sm text-gray-600">{followUp.contactName || selectedQuote.contact}</p>
+                                </div>
+                                <Badge
+                                  variant={
+                                    followUp.status === 'completed' ? 'default' :
+                                    followUp.status === 'cancelled' ? 'destructive' : 'outline'
+                                  }
+                                >
+                                  {followUp.status === 'pending' ? 'En attente' :
+                                   followUp.status === 'completed' ? 'Complétée' : 'Annulée'}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-gray-600 mb-3">{followUp.notes}</p>
+                              <div className="flex items-center justify-between text-xs text-gray-500">
+                                <p>Prévue le: {new Date(followUp.scheduledDate).toLocaleDateString('fr-FR')}</p>
+                                {followUp.status === 'pending' && (
+                                  <Button
+                                    onClick={() => handleCompleteFollowUp(followUp.id)}
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 text-xs"
+                                  >
+                                    <Check className="h-3 w-3 mr-1" />
+                                    Marquer complétée
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-8 text-gray-500">
+                            <RotateCcw className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                            <p>Aucune relance planifiée</p>
+                          </div>
+                        )}
+                      </div>
+                    </TabsContent>
+
+                    {/* SOUS-TAB SIGNATURES */}
+                    <TabsContent value="signatures" className="space-y-4 mt-4">
+                      <div className="flex gap-2 mb-4">
+                        <Button
+                          onClick={() => setShowNewSignature(true)}
+                          className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700"
+                          size="sm"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Demander une signature
+                        </Button>
+                      </div>
+
+                      <div className="space-y-3">
+                        {selectedQuote.tracking?.eSignatures && selectedQuote.tracking.eSignatures.length > 0 ? (
+                          selectedQuote.tracking.eSignatures.map((signature) => (
+                            <div key={signature.id} className="border rounded-lg p-4 bg-white">
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1">
+                                  <p className="font-semibold text-gray-900 flex items-center gap-2">
+                                    <FileSignature className="h-4 w-4 text-purple-500" />
+                                    {signature.signerName}
+                                  </p>
+                                  <p className="text-sm text-gray-600">{signature.signerEmail}</p>
+                                </div>
+                                <Badge
+                                  variant={
+                                    signature.status === 'signed' ? 'default' :
+                                    signature.status === 'rejected' ? 'destructive' :
+                                    signature.status === 'expired' ? 'secondary' : 'outline'
+                                  }
+                                >
+                                  {signature.status === 'pending' ? 'En attente' :
+                                   signature.status === 'signed' ? 'Signé' :
+                                   signature.status === 'rejected' ? 'Rejeté' : 'Expiré'}
+                                </Badge>
+                              </div>
+                              <div className="text-sm text-gray-600 space-y-1">
+                                <p>Demandée le: {new Date(signature.requestDate).toLocaleDateString('fr-FR')}</p>
+                                {signature.signedDate && (
+                                  <p>Signée le: {new Date(signature.signedDate).toLocaleDateString('fr-FR')}</p>
+                                )}
+                              </div>
+                              {signature.status === 'pending' && (
+                                <div className="flex gap-2 mt-3">
+                                  <Button
+                                    onClick={() => handleUpdateSignatureStatus(signature.id, 'signed')}
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 text-xs flex-1"
+                                  >
+                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                    Signé
+                                  </Button>
+                                  <Button
+                                    onClick={() => handleUpdateSignatureStatus(signature.id, 'rejected')}
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 text-xs flex-1 text-red-600"
+                                  >
+                                    <XCircle className="h-3 w-3 mr-1" />
+                                    Rejeté
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-8 text-gray-500">
+                            <FileSignature className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                            <p>Aucune signature demandée</p>
+                          </div>
                         )}
                       </div>
                     </TabsContent>
@@ -2070,6 +2674,395 @@ const Quotes = () => {
         open={showPDFSettings}
         onOpenChange={setShowPDFSettings}
       />
+
+      {/* Dialog: Ajouter une relance */}
+      <Dialog open={showNewFollowUp} onOpenChange={setShowNewFollowUp}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Ajouter une relance</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="followup-type" className="text-sm font-medium">Type de relance</Label>
+              <select
+                id="followup-type"
+                value={newFollowUp.type}
+                onChange={(e) => setNewFollowUp({ ...newFollowUp, type: e.target.value as 'email' | 'phone' | 'meeting' })}
+                className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="email">Email</option>
+                <option value="phone">Appel téléphonique</option>
+                <option value="meeting">Réunion</option>
+              </select>
+            </div>
+            <div>
+              <Label htmlFor="followup-name" className="text-sm font-medium">Contact</Label>
+              <Input
+                id="followup-name"
+                value={newFollowUp.contactName}
+                onChange={(e) => setNewFollowUp({ ...newFollowUp, contactName: e.target.value })}
+                placeholder={selectedQuote?.contact || 'Nom du contact'}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="followup-date" className="text-sm font-medium">Date prévue</Label>
+              <Input
+                id="followup-date"
+                type="date"
+                value={newFollowUp.scheduledDate}
+                onChange={(e) => setNewFollowUp({ ...newFollowUp, scheduledDate: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="followup-notes" className="text-sm font-medium">Notes</Label>
+              <textarea
+                id="followup-notes"
+                value={newFollowUp.notes}
+                onChange={(e) => setNewFollowUp({ ...newFollowUp, notes: e.target.value })}
+                placeholder="Description de la relance..."
+                className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-24"
+              />
+            </div>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setShowNewFollowUp(false)}>
+                Annuler
+              </Button>
+              <Button
+                onClick={handleAddFollowUp}
+                className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Ajouter
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Demander une signature */}
+      <Dialog open={showNewSignature} onOpenChange={setShowNewSignature}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Demander une signature électronique</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="signer-name" className="text-sm font-medium">Nom du signataire</Label>
+              <Input
+                id="signer-name"
+                value={newSignatureRequest.signerName}
+                onChange={(e) => setNewSignatureRequest({ ...newSignatureRequest, signerName: e.target.value })}
+                placeholder="Nom complet"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="signer-email" className="text-sm font-medium">Email du signataire</Label>
+              <Input
+                id="signer-email"
+                type="email"
+                value={newSignatureRequest.signerEmail}
+                onChange={(e) => setNewSignatureRequest({ ...newSignatureRequest, signerEmail: e.target.value })}
+                placeholder="email@example.com"
+                className="mt-1"
+              />
+            </div>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setShowNewSignature(false)}>
+                Annuler
+              </Button>
+              <Button
+                onClick={handleAddSignatureRequest}
+                className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Demander
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Global Analytics Dialog */}
+      <Dialog open={showGlobalAnalytics} onOpenChange={setShowGlobalAnalytics}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BarChart3 className="h-6 w-6 text-purple-600" />
+              Analytics Globales - Devis
+            </DialogTitle>
+          </DialogHeader>
+
+          <Tabs defaultValue="conversion" value={analyticsTab} onValueChange={setAnalyticsTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="conversion" className="text-xs">
+                <Target className="h-3 w-3 mr-1" />
+                Taux transformation
+              </TabsTrigger>
+              <TabsTrigger value="signature" className="text-xs">
+                <ClockIcon className="h-3 w-3 mr-1" />
+                Délai signature
+              </TabsTrigger>
+              <TabsTrigger value="amounts" className="text-xs">
+                <DollarSignIcon className="h-3 w-3 mr-1" />
+                Montants moyens
+              </TabsTrigger>
+            </TabsList>
+
+            {/* TAUX TRANSFORMATION */}
+            <TabsContent value="conversion" className="space-y-4 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                {/* Card: Taux global moyen */}
+                <div className="border rounded-lg p-4 bg-gradient-to-br from-green-50 to-emerald-50">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 uppercase font-semibold">Taux Global</p>
+                      <p className="text-3xl font-bold text-green-600 mt-2">
+                        {(quotes.filter(q => q.status === 'accepted').length / quotes.filter(q => q.status === 'sent' || q.status === 'accepted').length * 100).toFixed(1)}%
+                      </p>
+                      <p className="text-xs text-gray-600 mt-2">{quotes.filter(q => q.status === 'accepted').length} / {quotes.filter(q => q.status === 'sent' || q.status === 'accepted').length}</p>
+                    </div>
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <Target className="h-6 w-6 text-green-600" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card: Total devis */}
+                <div className="border rounded-lg p-4 bg-gradient-to-br from-blue-50 to-cyan-50">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 uppercase font-semibold">Total Devis</p>
+                      <p className="text-3xl font-bold text-blue-600 mt-2">{quotes.length}</p>
+                      <p className="text-xs text-gray-600 mt-2">
+                        {quotes.filter(q => q.status === 'draft').length} brouillons, {quotes.filter(q => q.status === 'sent').length} envoyés
+                      </p>
+                    </div>
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <FileText className="h-6 w-6 text-blue-600" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card: Statuts */}
+                <div className="border rounded-lg p-4 bg-gradient-to-br from-purple-50 to-pink-50">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 uppercase font-semibold">Répartition</p>
+                      <p className="text-2xl font-bold text-purple-600 mt-2">{quotes.filter(q => q.status === 'accepted').length} ✓</p>
+                      <p className="text-xs text-gray-600 mt-1">{quotes.filter(q => q.status === 'rejected').length} ✗ {quotes.filter(q => q.status === 'expired').length} expiré</p>
+                    </div>
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <CheckCircle className="h-6 w-6 text-purple-600" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Répartition par statut */}
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <div className="border rounded-lg p-3 bg-gray-50 text-center">
+                  <p className="text-2xl font-bold text-gray-700">{quotes.filter(q => q.status === 'draft').length}</p>
+                  <p className="text-xs text-gray-600 mt-1">Brouillons</p>
+                </div>
+                <div className="border rounded-lg p-3 bg-blue-50 text-center">
+                  <p className="text-2xl font-bold text-blue-600">{quotes.filter(q => q.status === 'sent').length}</p>
+                  <p className="text-xs text-gray-600 mt-1">Envoyés</p>
+                </div>
+                <div className="border rounded-lg p-3 bg-green-50 text-center">
+                  <p className="text-2xl font-bold text-green-600">{quotes.filter(q => q.status === 'accepted').length}</p>
+                  <p className="text-xs text-gray-600 mt-1">Acceptés</p>
+                </div>
+                <div className="border rounded-lg p-3 bg-red-50 text-center">
+                  <p className="text-2xl font-bold text-red-600">{quotes.filter(q => q.status === 'rejected').length}</p>
+                  <p className="text-xs text-gray-600 mt-1">Rejetés</p>
+                </div>
+                <div className="border rounded-lg p-3 bg-orange-50 text-center">
+                  <p className="text-2xl font-bold text-orange-600">{quotes.filter(q => q.status === 'expired').length}</p>
+                  <p className="text-xs text-gray-600 mt-1">Expirés</p>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* DÉLAI SIGNATURE */}
+            <TabsContent value="signature" className="space-y-4 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                {/* Card: Total signatures */}
+                <div className="border rounded-lg p-4 bg-gradient-to-br from-orange-50 to-red-50">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 uppercase font-semibold">Signatures Total</p>
+                      <p className="text-3xl font-bold text-orange-600 mt-2">
+                        {quotes.reduce((sum, q) => sum + (q.tracking?.eSignatures?.length || 0), 0)}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-2">demandées</p>
+                    </div>
+                    <div className="p-2 bg-orange-100 rounded-lg">
+                      <FileSignature className="h-6 w-6 text-orange-600" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card: Signatures complétées */}
+                <div className="border rounded-lg p-4 bg-gradient-to-br from-indigo-50 to-blue-50">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 uppercase font-semibold">Signées</p>
+                      <p className="text-3xl font-bold text-indigo-600 mt-2">
+                        {quotes.reduce((sum, q) => sum + (q.tracking?.eSignatures?.filter(s => s.status === 'signed').length || 0), 0)}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-2">complétées</p>
+                    </div>
+                    <div className="p-2 bg-indigo-100 rounded-lg">
+                      <CheckCircle className="h-6 w-6 text-indigo-600" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card: Taux de signature */}
+                <div className="border rounded-lg p-4 bg-gradient-to-br from-cyan-50 to-blue-50">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 uppercase font-semibold">Taux signature</p>
+                      <p className="text-3xl font-bold text-cyan-600 mt-2">
+                        {quotes.reduce((sum, q) => sum + (q.tracking?.eSignatures?.length || 0), 0) > 0
+                          ? ((quotes.reduce((sum, q) => sum + (q.tracking?.eSignatures?.filter(s => s.status === 'signed').length || 0), 0) / quotes.reduce((sum, q) => sum + (q.tracking?.eSignatures?.length || 0), 0)) * 100).toFixed(1)
+                          : '0'}%
+                      </p>
+                      <p className="text-xs text-gray-600 mt-2">complétées</p>
+                    </div>
+                    <div className="p-2 bg-cyan-100 rounded-lg">
+                      <Percent className="h-6 w-6 text-cyan-600" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Statuts signatures */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="border rounded-lg p-3 bg-yellow-50 text-center">
+                  <p className="text-2xl font-bold text-yellow-600">
+                    {quotes.reduce((sum, q) => sum + (q.tracking?.eSignatures?.filter(s => s.status === 'pending').length || 0), 0)}
+                  </p>
+                  <p className="text-xs text-gray-600 mt-1">En attente</p>
+                </div>
+                <div className="border rounded-lg p-3 bg-green-50 text-center">
+                  <p className="text-2xl font-bold text-green-600">
+                    {quotes.reduce((sum, q) => sum + (q.tracking?.eSignatures?.filter(s => s.status === 'signed').length || 0), 0)}
+                  </p>
+                  <p className="text-xs text-gray-600 mt-1">Signées</p>
+                </div>
+                <div className="border rounded-lg p-3 bg-red-50 text-center">
+                  <p className="text-2xl font-bold text-red-600">
+                    {quotes.reduce((sum, q) => sum + (q.tracking?.eSignatures?.filter(s => s.status === 'rejected').length || 0), 0)}
+                  </p>
+                  <p className="text-xs text-gray-600 mt-1">Rejetées</p>
+                </div>
+                <div className="border rounded-lg p-3 bg-orange-50 text-center">
+                  <p className="text-2xl font-bold text-orange-600">
+                    {quotes.reduce((sum, q) => sum + (q.tracking?.eSignatures?.filter(s => s.status === 'expired').length || 0), 0)}
+                  </p>
+                  <p className="text-xs text-gray-600 mt-1">Expirées</p>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* MONTANTS MOYENS */}
+            <TabsContent value="amounts" className="space-y-4 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                {/* Card: Montant moyen */}
+                <div className="border rounded-lg p-4 bg-gradient-to-br from-emerald-50 to-green-50">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 uppercase font-semibold">Montant moyen</p>
+                      <p className="text-2xl font-bold text-emerald-600 mt-2">
+                        {(quotes.reduce((sum, q) => sum + q.totalAmount, 0) / quotes.length).toLocaleString('fr-FR')} €
+                      </p>
+                      <p className="text-xs text-gray-600 mt-2">{quotes.length} devis</p>
+                    </div>
+                    <div className="p-2 bg-emerald-100 rounded-lg">
+                      <DollarSignIcon className="h-6 w-6 text-emerald-600" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card: Valeur totale */}
+                <div className="border rounded-lg p-4 bg-gradient-to-br from-yellow-50 to-amber-50">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 uppercase font-semibold">Valeur totale</p>
+                      <p className="text-2xl font-bold text-amber-600 mt-2">
+                        {quotes.reduce((sum, q) => sum + q.totalAmount, 0).toLocaleString('fr-FR')} €
+                      </p>
+                      <p className="text-xs text-gray-600 mt-2">tous les devis</p>
+                    </div>
+                    <div className="p-2 bg-amber-100 rounded-lg">
+                      <TrendingUpIcon className="h-6 w-6 text-amber-600" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card: Plage */}
+                <div className="border rounded-lg p-4 bg-gradient-to-br from-violet-50 to-purple-50">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 uppercase font-semibold">Plage</p>
+                      <p className="text-sm font-bold text-violet-600 mt-2">
+                        Min: {Math.min(...quotes.map(q => q.totalAmount)).toLocaleString('fr-FR')} €
+                      </p>
+                      <p className="text-sm font-bold text-violet-600 mt-1">
+                        Max: {Math.max(...quotes.map(q => q.totalAmount)).toLocaleString('fr-FR')} €
+                      </p>
+                    </div>
+                    <div className="p-2 bg-violet-100 rounded-lg">
+                      <BarChart3 className="h-6 w-6 text-violet-600" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Montants par statut */}
+              <div className="border rounded-lg p-4">
+                <h3 className="font-semibold text-gray-900 mb-4">Valeur par statut</h3>
+                <div className="space-y-3">
+                  {[
+                    { label: 'Acceptés', status: 'accepted', bgClass: 'bg-green-50', textClass: 'text-green-600' },
+                    { label: 'Envoyés', status: 'sent', bgClass: 'bg-blue-50', textClass: 'text-blue-600' },
+                    { label: 'Brouillons', status: 'draft', bgClass: 'bg-gray-50', textClass: 'text-gray-600' },
+                    { label: 'Rejetés', status: 'rejected', bgClass: 'bg-red-50', textClass: 'text-red-600' },
+                    { label: 'Expirés', status: 'expired', bgClass: 'bg-orange-50', textClass: 'text-orange-600' }
+                  ].map((item) => {
+                    const total = quotes.filter(q => q.status === item.status).reduce((sum, q) => sum + q.totalAmount, 0);
+                    const count = quotes.filter(q => q.status === item.status).length;
+                    return (
+                      <div key={item.status} className={`p-3 rounded-lg border ${item.bgClass}`}>
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="font-medium text-gray-900">{item.label}</p>
+                            <p className="text-sm text-gray-600">{count} devis</p>
+                          </div>
+                          <div className="text-right">
+                            <p className={`font-bold ${item.textClass}`}>
+                              {total.toLocaleString('fr-FR')} €
+                            </p>
+                            {count > 0 && (
+                              <p className={`text-xs ${item.textClass}`}>
+                                Moy: {(total / count).toLocaleString('fr-FR')} €
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
