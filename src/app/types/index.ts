@@ -97,6 +97,33 @@ export interface PipelineStage {
   successCriteria?: string;
 }
 
+export interface OpportunityNote {
+  id: string;
+  content: string;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface OpportunityAttachment {
+  id: string;
+  name: string;
+  url: string;
+  type: string;
+  size: number;
+  uploadedBy: string;
+  uploadedAt: Date;
+}
+
+export interface OpportunityActivity {
+  id: string;
+  type: 'stage_change' | 'probability_update' | 'amount_update' | 'contact_added' | 'note_added' | 'file_uploaded' | 'status_change';
+  description: string;
+  createdBy: string;
+  createdAt: Date;
+  metadata?: Record<string, any>;
+}
+
 export interface Opportunity {
   id: string;
   name: string;
@@ -113,7 +140,14 @@ export interface Opportunity {
   priority: Priority;
   description: string;
   owner: string; // userId
+  assignedTo?: string[]; // Array of user IDs for commercial team
   tags: string[];
+  notes: OpportunityNote[];
+  attachments: OpportunityAttachment[];
+  activities: OpportunityActivity[];
+  score?: number; // Opportunity scoring (0-100)
+  conversionRate?: number; // Historical conversion rate for this type of opportunity
+  salesCycleDuration?: number; // Expected duration in days
   customFields?: Record<string, any>;
   createdAt: Date;
   updatedAt: Date;
