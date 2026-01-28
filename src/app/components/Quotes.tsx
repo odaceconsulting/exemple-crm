@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -48,6 +48,9 @@ import {
   Edit,
   Trash2
 } from 'lucide-react';
+
+import Catalogue from '@/app/components/Catalogue';
+import { catalogService } from '@/app/services/dataService';
 
 interface QuoteItem {
   id: number;
@@ -156,6 +159,24 @@ const Quotes = () => {
       { id: 1, description: '', quantity: 1, unitPrice: 0 }
     ]
   });
+  const [catalog, setCatalog] = useState<any[]>([]);
+  const [showCatalogueModal, setShowCatalogueModal] = useState(false);
+  const [showCatalogueInline, setShowCatalogueInline] = useState(false);
+
+  useEffect(() => {
+    setCatalog(catalogService.getCatalog());
+  }, []);
+
+  const addCatalogItemToNewQuote = (catalogItemId: number) => {
+    const items = catalogService.getCatalog();
+    const item = items.find((c: any) => c.id === catalogItemId);
+    if (!item) return;
+    const newId = Math.max(...newQuoteForm.items.map(i => i.id), 0) + 1;
+    setNewQuoteForm({
+      ...newQuoteForm,
+      items: [...newQuoteForm.items, { id: newId, description: item.name, quantity: item.defaultQuantity || 1, unitPrice: item.unitPrice }]
+    });
+  };
 
   const [editQuoteForm, setEditQuoteForm] = useState({
     company: '',
@@ -352,13 +373,21 @@ const Quotes = () => {
             </h1>
             <p className="text-gray-600 mt-2">Création et gestion des devis commerciaux</p>
           </div>
-          <button
-            onClick={() => setShowNewQuote(true)}
-            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-full hover:from-blue-700 hover:to-cyan-700 transition-all flex items-center gap-2 border-2 border-blue-700 shadow-lg hover:shadow-xl font-semibold"
-          >
-            <Plus className="h-5 w-5" />
-            Nouveau devis
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowNewQuote(true)}
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-full hover:from-blue-700 hover:to-cyan-700 transition-all flex items-center gap-2 border-2 border-blue-700 shadow-lg hover:shadow-xl font-semibold"
+            >
+              <Plus className="h-5 w-5" />
+              Nouveau devis
+            </button>
+            <button
+              onClick={() => setShowCatalogueModal(true)}
+              className="px-5 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-full hover:from-emerald-700 hover:to-green-700 transition-all flex items-center gap-2 border-2 border-emerald-700 shadow hover:shadow-md font-semibold"
+            >
+              Catalogue
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1010,6 +1039,20 @@ const Quotes = () => {
                 <FileText className="h-5 w-5" />
                 Articles du devis
               </h3>
+              <div className="flex gap-2 mb-3">
+                <Button size="sm" variant="outline" onClick={() => setShowCatalogueInline(true)}>Ajouter depuis le catalogue</Button>
+                {showCatalogueInline && (
+                  <div className="w-full mt-3 p-4 border rounded bg-white">
+                    <Catalogue onSelect={(item: any) => {
+                      addCatalogItemToNewQuote(item.id);
+                      // keep inline open to allow multi-select; highlight could be added later
+                    }} />
+                    <div className="flex justify-end mt-3">
+                      <Button variant="outline" onClick={() => setShowCatalogueInline(false)}>Fermer</Button>
+                    </div>
+                  </div>
+                )}
+              </div>
               <div className="space-y-3">
                 {newQuoteForm.items.map((item, index) => (
                   <div key={item.id} className="grid grid-cols-12 gap-3 items-end">
@@ -1193,6 +1236,25 @@ const Quotes = () => {
                 Créer le devis
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Catalogue Modal (réutilise la page Catalogue, permet d'ajouter au formulaire de création) */}
+      <Dialog open={showCatalogueModal} onOpenChange={setShowCatalogueModal}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Catalogue</DialogTitle>
+          </DialogHeader>
+          <div className="p-4">
+            <Catalogue onSelect={(item: any) => {
+              // ensure new quote form is open
+              if (!showNewQuote) setShowNewQuote(true);
+              addCatalogItemToNewQuote(item.id);
+              setShowCatalogueModal(false);
+              // refresh local catalog state
+              setCatalog(catalogService.getCatalog());
+            }} />
           </div>
         </DialogContent>
       </Dialog>

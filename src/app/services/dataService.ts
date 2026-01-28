@@ -347,3 +347,62 @@ export const cacheService = {
     }
   },
 };
+
+// ======= Catalogue (produits / services) =======
+export interface CatalogItem {
+  id: number;
+  name: string;
+  description?: string;
+  unitPrice: number;
+  defaultQuantity?: number;
+  defaultDiscount?: number; // percent
+  vatRate?: number; // percent
+  currency?: string;
+}
+
+const CATALOG_KEY = 'app_catalog_items_v1';
+
+export const catalogService = {
+  getCatalog: (): CatalogItem[] => {
+    try {
+      const raw = localStorage.getItem(CATALOG_KEY);
+      if (!raw) return [];
+      return JSON.parse(raw) as CatalogItem[];
+    } catch (e) {
+      console.error('Failed to read catalog from localStorage', e);
+      return [];
+    }
+  },
+
+  saveCatalog: (items: CatalogItem[]) => {
+    try {
+      localStorage.setItem(CATALOG_KEY, JSON.stringify(items));
+    } catch (e) {
+      console.error('Failed to save catalog to localStorage', e);
+    }
+  },
+
+  addCatalogItem: (item: Omit<CatalogItem, 'id'>) => {
+    const items = catalogService.getCatalog();
+    const id = items.length ? Math.max(...items.map(i => i.id)) + 1 : 1;
+    const newItem: CatalogItem = { id, ...item } as CatalogItem;
+    items.push(newItem);
+    catalogService.saveCatalog(items);
+    return newItem;
+  },
+
+  updateCatalogItem: (id: number, patch: Partial<CatalogItem>) => {
+    const items = catalogService.getCatalog();
+    const idx = items.findIndex(i => i.id === id);
+    if (idx === -1) return null;
+    items[idx] = { ...items[idx], ...patch };
+    catalogService.saveCatalog(items);
+    return items[idx];
+  },
+
+  deleteCatalogItem: (id: number) => {
+    let items = catalogService.getCatalog();
+    items = items.filter(i => i.id !== id);
+    catalogService.saveCatalog(items);
+  }
+};
