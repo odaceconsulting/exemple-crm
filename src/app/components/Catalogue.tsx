@@ -114,8 +114,8 @@ const Catalogue: React.FC<{ onSelect?: (item: LocalCatalogItem) => void }> = ({ 
               </div>
 
               <div className="flex gap-2">
-                <Button onClick={save}>{editing ? 'Enregistrer' : 'Ajouter'}</Button>
-                <Button variant="outline" onClick={resetForm}>Annuler</Button>
+                <Button onClick={save} className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 transition-all shadow-md hover:shadow-lg">{editing ? 'Enregistrer' : 'Ajouter'}</Button>
+                <Button variant="outline" onClick={resetForm} className="border-2 border-gray-300 hover:bg-gray-100 transition-all">Annuler</Button>
               </div>
             </div>
           </CardContent>
@@ -136,9 +136,9 @@ const Catalogue: React.FC<{ onSelect?: (item: LocalCatalogItem) => void }> = ({ 
                     <p className="text-xs text-gray-500">Prix: €{it.unitPrice.toLocaleString()} • TVA: {it.vatRate}% • Remise standard: {it.defaultDiscount}%</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {onSelect && <Button size="sm" onClick={() => onSelect(it)}>Ajouter au devis</Button>}
-                    <Button size="sm" variant="outline" onClick={() => startEdit(it)}>Éditer</Button>
-                    <Button size="sm" variant="ghost" onClick={() => remove(it.id)} className="text-red-600">Suppr</Button>
+                    {onSelect && <Button size="sm" onClick={() => onSelect(it)} className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 transition-all shadow-sm hover:shadow-md">Ajouter au devis</Button>}
+                    <Button size="sm" variant="outline" onClick={() => startEdit(it)} className="border-2 border-blue-500 text-blue-600 hover:bg-blue-50 transition-all">Éditer</Button>
+                    <Button size="sm" variant="ghost" onClick={() => remove(it.id)} className="text-red-600 hover:bg-red-50 hover:text-red-700 transition-all">Suppr</Button>
                   </div>
                 </div>
               ))}
