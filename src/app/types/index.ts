@@ -205,6 +205,20 @@ export interface QuoteItem {
   total: number;
 }
 
+// ===== RECURRING / DEPOSITS =====
+export interface Recurrence {
+  frequency: 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+  nextDate: string;
+  occurrences?: number;
+}
+
+export interface Deposit {
+  id: number | string;
+  amount: number;
+  date: string | Date;
+  note?: string;
+}
+
 // ========== GED - GESTION ÉLECTRONIQUE DE DOCUMENTS ==========
 export type DocumentType = 'contract' | 'invoice' | 'quote' | 'proposal' | 'report' | 'receipt' | 'other';
 export type DocumentCategory = 'commercial' | 'financial' | 'rh' | 'legal' | 'technical' | 'marketing' | 'other';

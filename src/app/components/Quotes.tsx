@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Recurrence, Deposit } from '@/app/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -171,6 +172,7 @@ interface QuoteTracking {
   eSignatures?: ESignature[];
 }
 
+
 interface ConversionRate {
   period: string;
   sent: number;
@@ -225,6 +227,8 @@ interface Quote {
   history?: WorkflowHistory[];
   comments?: WorkflowComment[];
   tracking?: QuoteTracking;
+  recurrence?: Recurrence;
+  deposits?: Deposit[];
   analytics?: QuoteAnalytics;
 }
 
@@ -462,6 +466,7 @@ const Quotes = () => {
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string>('');
   const [showPDFSettings, setShowPDFSettings] = useState(false);
   const [showGlobalAnalytics, setShowGlobalAnalytics] = useState(false);
+  
   const [newWorkflowComment, setNewWorkflowComment] = useState('');
   const [workflowTab, setWorkflowTab] = useState<'approvals' | 'notifications' | 'history' | 'comments'>('approvals');
   
@@ -817,6 +822,8 @@ const Quotes = () => {
     }
   };
 
+  
+
   const handleCompleteFollowUp = (followUpId: number) => {
     if (selectedQuote) {
       setQuotes(quotes.map(q => {
@@ -893,6 +900,7 @@ const Quotes = () => {
               <FileText className="h-4 w-4" />
               Paramètres PDF
             </Button>
+            
             <button
               onClick={() => setShowNewQuote(true)}
               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-full hover:from-blue-700 hover:to-cyan-700 transition-all flex items-center gap-2 border-2 border-blue-700 shadow-lg hover:shadow-xl font-semibold"
@@ -2574,6 +2582,8 @@ const Quotes = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      
 
       {/* Catalogue Modal (réutilise la page Catalogue, permet d'ajouter au formulaire de création) */}
       <Dialog open={showCatalogueModal} onOpenChange={setShowCatalogueModal}>
