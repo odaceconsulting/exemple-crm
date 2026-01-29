@@ -418,6 +418,8 @@ const Companies = () => {
     }
   };
 
+  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 p-4 md:p-8">
       {/* Header */}
@@ -671,6 +673,8 @@ const Companies = () => {
           </button>
         </div>
       </div>
+
+      
 
       {/* TEMPLATES MODAL */}
       <Dialog open={showTemplatesModal} onOpenChange={setShowTemplatesModal}>
