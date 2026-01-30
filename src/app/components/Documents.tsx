@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/app/components/ui/alert-dialog';
@@ -8,11 +8,12 @@ import { Input } from '@/app/components/ui/input';
 import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
 import { Label } from '@/app/components/ui/label';
-import { 
-  Upload, 
-  File, 
-  FileText, 
-  Image as ImageIcon, 
+import { Progress } from '@/app/components/ui/progress';
+import {
+  Upload,
+  File,
+  FileText,
+  Image as ImageIcon,
   Search,
   Download,
   Trash2,
@@ -40,9 +41,22 @@ import {
   Archive,
   Folder,
   TrendingUp,
-  FileJson
+  FileJson,
+  FolderPlus,
+  ChevronRight,
+  Home,
+  Shield,
+  PenTool,
+  Link2,
+  Sparkles,
+  CloudUpload,
+  Database
 } from 'lucide-react';
 import { Document as DocumentType, DocumentVersion, AccessRight, ApprovalWorkflow } from '@/app/types';
+import { folderService } from '@/app/services/FolderService';
+import { uploadService } from '@/app/services/UploadService';
+import { searchService } from '@/app/services/SearchService';
+import { metadataService } from '@/app/services/MetadataService';
 
 const Documents = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -56,6 +70,31 @@ const Documents = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'kanban'>('grid');
   const [activeTab, setActiveTab] = useState('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // New GED features state
+  const [currentFolderId, setCurrentFolderId] = useState<string | undefined>(undefined);
+  const [folders, setFolders] = useState<any[]>([]);
+  const [breadcrumb, setBreadcrumb] = useState<any[]>([{ id: undefined, name: 'Racine' }]);
+  const [uploadProgress, setUploadProgress] = useState<any[]>([]);
+  const [searchSuggestions, setSearchSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+
+  // New GED features dialogs
+  const [showSignatureDialog, setShowSignatureDialog] = useState(false);
+  const [showSecurityDialog, setShowSecurityDialog] = useState(false);
+  const [showIntegrationsDialog, setShowIntegrationsDialog] = useState(false);
+  const [gedFolders, setGedFolders] = useState([
+    { id: '1', name: 'Contrats', count: 12 },
+    { id: '2', name: 'Factures', count: 45 },
+    { id: '3', name: 'Projets', count: 8 },
+    { id: '4', name: 'RH', count: 23 }
+  ]);
+  const [uploadProgressValue, setUploadProgressValue] = useState(0);
+  const [searchSuggestionsVisible, setSearchSuggestionsVisible] = useState(false);
+  const [searchSuggestionsList, setSearchSuggestionsList] = useState<any[]>([]);
 
   interface Document {
     id: number;
@@ -91,14 +130,14 @@ const Documents = () => {
     },
     {
       id: 2,
-      name: 'Devis_TechStart_Q1.pdf',
+      name: 'Contrat_TechStart_Q1.pdf',
       type: 'pdf',
-      category: 'Devis',
+      category: 'Contrats',
       size: '856 KB',
       uploadDate: '2026-01-19',
       uploadedBy: 'Jean Martin',
       company: 'TechStart SAS',
-      tags: ['Devis', 'En attente'],
+      tags: ['Contrat', 'En attente'],
       status: 'pending',
       version: 1
     },
@@ -117,14 +156,14 @@ const Documents = () => {
     },
     {
       id: 4,
-      name: 'Presentation_Innovation.pptx',
+      name: 'Projet_Innovation.pptx',
       type: 'pptx',
-      category: 'Présentations',
+      category: 'Projets',
       size: '5.8 MB',
       uploadDate: '2026-01-17',
       uploadedBy: 'Pierre Leclerc',
       company: 'Innovation Labs',
-      tags: ['Présentation', 'Commercial'],
+      tags: ['Projet', 'Commercial'],
       status: 'approved',
       version: 1
     },
@@ -143,14 +182,14 @@ const Documents = () => {
     },
     {
       id: 6,
-      name: 'Bon_commande_SmartTech.pdf',
+      name: 'Facture_SmartTech.pdf',
       type: 'pdf',
-      category: 'Commandes',
+      category: 'Factures',
       size: '320 KB',
       uploadDate: '2026-01-15',
       uploadedBy: 'Alice Rousseau',
       company: 'Smart Tech SARL',
-      tags: ['Bon de commande', 'Validé'],
+      tags: ['Facture', 'Validé'],
       status: 'approved',
       version: 1
     },
@@ -255,22 +294,22 @@ const Documents = () => {
   const filteredDocuments = documents.filter(doc => {
     // Filtre de recherche
     const matchesSearch = doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         doc.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         doc.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                         doc.uploadedBy.toLowerCase().includes(searchQuery.toLowerCase());
-    
+      doc.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      doc.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      doc.uploadedBy.toLowerCase().includes(searchQuery.toLowerCase());
+
     // Filtre par catégorie
     const matchesCategory = selectedCategory === 'all' || doc.category === selectedCategory;
-    
+
     // Filtre par statut
-    const matchesStatus = activeTab === 'all' || 
-                         (activeTab === 'approved' && doc.status === 'approved') ||
-                         (activeTab === 'pending' && doc.status === 'pending') ||
-                         (activeTab === 'recent' && new Date(doc.uploadDate) > new Date(new Date().setDate(new Date().getDate() - 7)));
-    
+    const matchesStatus = activeTab === 'all' ||
+      (activeTab === 'approved' && doc.status === 'approved') ||
+      (activeTab === 'pending' && doc.status === 'pending') ||
+      (activeTab === 'recent' && new Date(doc.uploadDate) > new Date(new Date().setDate(new Date().getDate() - 7)));
+
     // Filtre par montant (pas applicable pour documents, juste pour montrer la structure)
     // const matchesValue = true; // Documents n'ont pas de valeur
-    
+
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
@@ -336,7 +375,7 @@ const Documents = () => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       // Handle file upload
       console.log('Files dropped:', e.dataTransfer.files);
@@ -356,112 +395,83 @@ const Documents = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 p-4 md:p-8">
-      {/* Header Section */}
-      <div className="mb-8">
+
+      {/* Header Section - AT THE TOP */}
+      <div className="mb-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 flex items-center gap-3">
-              <div className="p-3 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl">
-                <FolderOpen className="h-8 w-8 text-white" />
-              </div>
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               Gestion Électronique de Documents
             </h1>
-            <p className="text-gray-600 mt-2">Organisez, gérez et suivez tous vos documents en un seul endroit</p>
+            <p className="text-gray-600 mt-2">Gérez vos documents avec arborescence, signature électronique et sécurité avancée</p>
           </div>
-          <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-            <DialogTrigger asChild>
-              <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full hover:from-blue-700 hover:to-indigo-700 transition-all flex items-center gap-2 border-2 border-blue-700 shadow-lg hover:shadow-xl font-semibold">
-                <Upload className="h-5 w-5" />
-                <span>Téléverser Document</span>
-              </button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg md:max-w-2xl">
-              <DialogHeader>
-                <DialogTitle className="text-lg md:text-xl">Téléverser un Document</DialogTitle>
-              </DialogHeader>
-              <div className="py-4 space-y-6 max-h-[60vh] overflow-y-auto">
-                {/* Drag and Drop Zone */}
-                <div
-                  className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
-                    dragActive 
-                      ? 'border-blue-500 bg-blue-50' 
-                      : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                  onDragEnter={handleDrag}
-                  onDragLeave={handleDrag}
-                  onDragOver={handleDrag}
-                  onDrop={handleDrop}
-                >
-                  <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-lg font-medium text-gray-700 mb-2">
-                    Glissez-déposez vos fichiers ici
-                  </p>
-                  <p className="text-sm text-gray-500 mb-4">
-                    ou cliquez pour sélectionner
-                  </p>
-                  <button
-                    onClick={handleFileSelect}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Parcourir les fichiers
-                  </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                  <p className="text-xs text-gray-400 mt-4">
-                    Formats supportés: PDF, DOC, XLS, PPT, Images (max 10MB)
-                  </p>
-                </div>
-
-                {/* Metadata Form */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">Catégorie</label>
-                    <select className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                      <option value="">Sélectionner une catégorie</option>
-                      <option value="Contrats">Contrats</option>
-                      <option value="Devis">Devis</option>
-                      <option value="Factures">Factures</option>
-                      <option value="Projets">Projets</option>
-                      <option value="RH">RH</option>
-                      <option value="Marketing">Marketing</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">Entreprise associée</label>
-                    <Input placeholder="Nom de l'entreprise" />
-                  </div>
-                  <div className="space-y-2 col-span-2">
-                    <label className="text-sm font-medium text-gray-700">Tags</label>
-                    <Input placeholder="Ajouter des tags (séparés par des virgules)" />
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setIsUploadDialogOpen(false)}
-                  className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Annuler
-                </button>
-                <button
-                  onClick={() => setIsUploadDialogOpen(false)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Téléverser
-                </button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button
+            onClick={() => setIsUploadDialogOpen(true)}
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg"
+          >
+            <Upload className="h-5 w-5 mr-2" />
+            Téléverser Document
+          </Button>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      {/* Breadcrumb Navigation */}
+      <div className="mb-4 flex items-center gap-2 text-sm">
+        <Home className="h-4 w-4 text-gray-500" />
+        {breadcrumb.map((item, index) => (
+          <React.Fragment key={item.id || 'root'}>
+            {index > 0 && <ChevronRight className="h-4 w-4 text-gray-400" />}
+            <button
+              onClick={() => {
+                setCurrentFolderId(item.id);
+                setBreadcrumb(breadcrumb.slice(0, index + 1));
+              }}
+              className={`hover:text-blue-600 transition-colors ${index === breadcrumb.length - 1 ? 'text-blue-600 font-semibold' : 'text-gray-600'
+                }`}
+            >
+              {item.name}
+            </button>
+          </React.Fragment>
+        ))}
+      </div>
+
+      {/* New Features Bar */}
+      <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <button
+          onClick={() => setIsCreateFolderOpen(true)}
+          className="p-4 bg-white border-2 border-dashed border-blue-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all flex items-center gap-3"
+        >
+          <FolderPlus className="h-5 w-5 text-blue-600" />
+          <span className="font-semibold text-gray-700">Nouveau Dossier</span>
+        </button>
+
+        <button
+          onClick={() => setShowSignatureDialog(true)}
+          className="p-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-lg hover:from-purple-600 hover:to-indigo-600 transition-all flex items-center gap-3 shadow-md"
+        >
+          <PenTool className="h-5 w-5" />
+          <span className="font-semibold">Signature</span>
+        </button>
+
+        <button
+          onClick={() => setShowSecurityDialog(true)}
+          className="p-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all flex items-center gap-3 shadow-md"
+        >
+          <Shield className="h-5 w-5" />
+          <span className="font-semibold">Sécurité</span>
+        </button>
+
+        <button
+          onClick={() => setShowIntegrationsDialog(true)}
+          className="p-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition-all flex items-center gap-3 shadow-md"
+        >
+          <Link2 className="h-5 w-5" />
+          <span className="font-semibold">Intégrations</span>
+        </button>
+      </div>
+
+      {/* KPI Cards - Clean 5-column grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
         <Card className="border-0 shadow-md hover:shadow-lg transition-shadow bg-white">
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
@@ -514,63 +524,141 @@ const Documents = () => {
             </div>
           </CardContent>
         </Card>
+        <Card className="border-0 shadow-md hover:shadow-lg transition-shadow bg-white">
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-gray-600 font-medium">Dossiers GED</p>
+                <p className="text-3xl font-bold text-blue-600 mt-2">{gedFolders.length}</p>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <FolderOpen className="h-6 w-6 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Folders Section */}
+      {gedFolders.length > 0 && (
+        <Card className="mb-8 border-0 shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FolderOpen className="h-6 w-6" />
+                Arborescence - Dossiers ({gedFolders.length})
+              </div>
+              {currentFolderId && (
+                <Badge className="bg-white text-blue-600">
+                  Affichage: {breadcrumb[breadcrumb.length - 1]?.name}
+                </Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {gedFolders.map((folder) => {
+                const folderDocCount = documents.filter(doc => doc.category === folder.name).length;
+                const isSelected = currentFolderId === folder.id;
+
+                return (
+                  <button
+                    key={folder.id}
+                    onClick={() => {
+                      setCurrentFolderId(folder.id);
+                      setBreadcrumb([...breadcrumb.slice(0, 1), { id: folder.id, name: folder.name }]);
+                    }}
+                    className={`p-4 bg-white rounded-lg hover:shadow-md transition-all group ${isSelected
+                        ? 'border-2 border-blue-500 shadow-lg'
+                        : 'border-2 border-gray-200 hover:border-blue-500'
+                      }`}
+                  >
+                    <FolderOpen className={`h-12 w-12 mx-auto mb-2 group-hover:scale-110 transition-transform ${isSelected ? 'text-blue-600' : 'text-blue-500'
+                      }`} />
+                    <p className={`text-sm font-semibold text-center truncate ${isSelected ? 'text-blue-600' : 'text-gray-800'
+                      }`}>{folder.name}</p>
+                    <p className="text-xs text-gray-500 text-center mt-1">{folderDocCount} fichiers</p>
+                  </button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Navigation Tabs */}
       <div className="my-6 sm:my-8">
+        {/* Show folder filter info if a folder is selected */}
+        {currentFolderId && (
+          <div className="mb-4 p-4 bg-blue-50 border-l-4 border-blue-500 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FolderOpen className="h-5 w-5 text-blue-600" />
+                <p className="text-sm font-semibold text-blue-800">
+                  Affichage des documents du dossier: <span className="font-bold">{breadcrumb[breadcrumb.length - 1]?.name}</span>
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setCurrentFolderId(undefined);
+                  setBreadcrumb([{ id: undefined, name: 'Racine' }]);
+                }}
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Afficher tous les documents
+              </button>
+            </div>
+          </div>
+        )}
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-2 mb-20 sm:mb-20 md:mb-12 lg:mb-8 bg-transparent border-0 p-0">
-            <TabsTrigger 
-              value="all" 
-              className={`flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 ${
-                activeTab === 'all'
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-md'
-                  : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600'
-              }`}
+            <TabsTrigger
+              value="all"
+              className={`flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 ${activeTab === 'all'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-md'
+                : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600'
+                }`}
             >
               <FileText className="h-4 w-4" />
               <span className="inline">Tous</span>
             </TabsTrigger>
-            <TabsTrigger 
-              value="recent" 
-              className={`flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 ${
-                activeTab === 'recent'
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-md'
-                  : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600'
-              }`}
+            <TabsTrigger
+              value="recent"
+              className={`flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 ${activeTab === 'recent'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-md'
+                : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600'
+                }`}
             >
               <Clock className="h-4 w-4" />
               <span className="inline">Récents</span>
             </TabsTrigger>
-            <TabsTrigger 
-              value="approved" 
-              className={`flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 ${
-                activeTab === 'approved'
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-md'
-                  : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600'
-              }`}
+            <TabsTrigger
+              value="approved"
+              className={`flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 ${activeTab === 'approved'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-md'
+                : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600'
+                }`}
             >
               <CheckCircle className="h-4 w-4" />
               <span className="inline">Approuvés</span>
             </TabsTrigger>
-            <TabsTrigger 
-              value="pending" 
-              className={`flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 ${
-                activeTab === 'pending'
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-md'
-                  : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600'
-              }`}
+            <TabsTrigger
+              value="pending"
+              className={`flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 ${activeTab === 'pending'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-md'
+                : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600'
+                }`}
             >
               <AlertCircle className="h-4 w-4" />
               <span className="inline">Attente</span>
             </TabsTrigger>
-            <TabsTrigger 
-              value="shared" 
-              className={`flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 ${
-                activeTab === 'shared'
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-md'
-                  : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600'
-              }`}
+            <TabsTrigger
+              value="shared"
+              className={`flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 ${activeTab === 'shared'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-md'
+                : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600'
+                }`}
             >
               <Share2 className="h-4 w-4" />
               <span className="inline">Partagés</span>
@@ -594,33 +682,30 @@ const Documents = () => {
         <div className="flex gap-2">
           <button
             onClick={() => setViewMode('grid')}
-            className={`p-2 rounded-lg transition-all flex items-center justify-center ${
-              viewMode === 'grid'
-                ? 'bg-blue-600 text-white border-2 border-blue-600'
-                : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
-            }`}
+            className={`p-2 rounded-lg transition-all flex items-center justify-center ${viewMode === 'grid'
+              ? 'bg-blue-600 text-white border-2 border-blue-600'
+              : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
             title="Vue Grille"
           >
             <Grid3x3 className="h-5 w-5" />
           </button>
           <button
             onClick={() => setViewMode('list')}
-            className={`p-2 rounded-lg transition-all flex items-center justify-center ${
-              viewMode === 'list'
-                ? 'bg-blue-600 text-white border-2 border-blue-600'
-                : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
-            }`}
+            className={`p-2 rounded-lg transition-all flex items-center justify-center ${viewMode === 'list'
+              ? 'bg-blue-600 text-white border-2 border-blue-600'
+              : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
             title="Vue Liste"
           >
             <List className="h-5 w-5" />
           </button>
           <button
             onClick={() => setViewMode('kanban')}
-            className={`p-2 rounded-lg transition-all flex items-center justify-center ${
-              viewMode === 'kanban'
-                ? 'bg-blue-600 text-white border-2 border-blue-600'
-                : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
-            }`}
+            className={`p-2 rounded-lg transition-all flex items-center justify-center ${viewMode === 'kanban'
+              ? 'bg-blue-600 text-white border-2 border-blue-600'
+              : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
             title="Vue Kanban"
           >
             <Kanban className="h-5 w-5" />
@@ -669,7 +754,7 @@ const Documents = () => {
                               Voir
                             </DropdownMenuItem>
                           )}
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             className="flex items-center gap-2 cursor-pointer text-red-600 hover:text-red-700"
                             onSelect={() => handleDeleteDocument(doc.id)}
                           >
@@ -813,16 +898,16 @@ const Documents = () => {
                                 <Eye className="h-4 w-4" />
                               </button>
                             )}
-                            <button 
+                            <button
                               onClick={() => handleShareDocument(doc)}
-                              className="p-2 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors" 
+                              className="p-2 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors"
                               title="Partager"
                             >
                               <Share2 className="h-4 w-4" />
                             </button>
-                            <button 
+                            <button
                               onClick={() => handleDeleteDocument(doc.id)}
-                              className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" 
+                              className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
                               title="Supprimer"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -907,7 +992,7 @@ const Documents = () => {
                                   <Eye className="h-4 w-4" />
                                   Voir
                                 </DropdownMenuItem>
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                   className="flex items-center gap-2 cursor-pointer text-red-600 hover:text-red-700"
                                   onSelect={() => handleDeleteDocument(doc.id)}
                                 >
@@ -917,7 +1002,7 @@ const Documents = () => {
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
-                          
+
                           <div className="space-y-2 py-3 border-t border-b border-gray-200">
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-gray-600">Catégorie:</span>
@@ -976,15 +1061,15 @@ const Documents = () => {
           <CardContent className="p-0">
             <Tabs defaultValue="workflow" className="w-full">
               <TabsList className="grid w-full grid-cols-2 gap-2 my-6 sm:my-8 mb-16 sm:mb-16 md:mb-12 lg:mb-8 bg-transparent border-0 p-4">
-                <TabsTrigger 
-                  value="workflow" 
+                <TabsTrigger
+                  value="workflow"
                   className="flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
                 >
                   <FileCheck className="h-4 w-4" />
                   <span className="inline">Workflows</span>
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="access" 
+                <TabsTrigger
+                  value="access"
                   className="flex items-center justify-center gap-2 px-2 sm:px-3 py-2 rounded-md transition-all font-semibold text-sm border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-md"
                 >
                   <Lock className="h-4 w-4" />
@@ -1031,7 +1116,7 @@ const Documents = () => {
                             {doc.status === 'approved' ? '✓ Approuvé' : '⏳ En attente'}
                           </Badge>
                         </div>
-                        
+
                         <div className="space-y-4">
                           {doc.steps.map((step, stepIdx) => (
                             <div key={stepIdx} className="flex items-center gap-4 pb-4 border-b border-gray-200 last:border-b-0">
@@ -1099,7 +1184,7 @@ const Documents = () => {
               <TabsContent value="access" className="p-8 space-y-6 bg-white">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">Permissions</h2>
-                  
+
                   {/* Permissions Definition Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     {/* Consulter Permission */}
@@ -1317,7 +1402,7 @@ const Documents = () => {
                             </span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                            <div 
+                            <div
                               className="bg-gradient-to-r from-indigo-500 to-indigo-600 h-3 rounded-full transition-all"
                               style={{ width: `${classification.confidence}%` }}
                             ></div>
@@ -1351,7 +1436,7 @@ const Documents = () => {
               <div className="space-y-3">
                 <Label className="text-sm font-semibold">Ajouter un utilisateur</Label>
                 <div className="flex gap-2">
-                  <select 
+                  <select
                     value={newShareUser}
                     onChange={(e) => setNewShareUser(e.target.value)}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
@@ -1372,31 +1457,28 @@ const Documents = () => {
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     onClick={() => setNewSharePermission('view')}
-                    className={`p-3 rounded-lg border-2 transition-all text-sm font-semibold ${
-                      newSharePermission === 'view'
-                        ? 'border-blue-600 bg-blue-50 text-blue-900'
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-                    }`}
+                    className={`p-3 rounded-lg border-2 transition-all text-sm font-semibold ${newSharePermission === 'view'
+                      ? 'border-blue-600 bg-blue-50 text-blue-900'
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                      }`}
                   >
                     👁️ Consulter
                   </button>
                   <button
                     onClick={() => setNewSharePermission('edit')}
-                    className={`p-3 rounded-lg border-2 transition-all text-sm font-semibold ${
-                      newSharePermission === 'edit'
-                        ? 'border-blue-600 bg-blue-50 text-blue-900'
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-                    }`}
+                    className={`p-3 rounded-lg border-2 transition-all text-sm font-semibold ${newSharePermission === 'edit'
+                      ? 'border-blue-600 bg-blue-50 text-blue-900'
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                      }`}
                   >
                     ✏️ Éditer
                   </button>
                   <button
                     onClick={() => setNewSharePermission('admin')}
-                    className={`p-3 rounded-lg border-2 transition-all text-sm font-semibold ${
-                      newSharePermission === 'admin'
-                        ? 'border-blue-600 bg-blue-50 text-blue-900'
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-                    }`}
+                    className={`p-3 rounded-lg border-2 transition-all text-sm font-semibold ${newSharePermission === 'admin'
+                      ? 'border-blue-600 bg-blue-50 text-blue-900'
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                      }`}
                   >
                     🔐 Admin
                   </button>
@@ -1404,7 +1486,7 @@ const Documents = () => {
               </div>
 
               {/* Add Button */}
-              <Button 
+              <Button
                 onClick={handleAddShareUser}
                 disabled={!newShareUser}
                 className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white"
@@ -1447,7 +1529,7 @@ const Documents = () => {
                 <Button variant="outline" onClick={() => setIsShareDialogOpen(false)}>
                   Annuler
                 </Button>
-                <Button 
+                <Button
                   onClick={handleSaveShare}
                   className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white"
                 >
@@ -1456,6 +1538,189 @@ const Documents = () => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Signature Électronique */}
+      <Dialog open={showSignatureDialog} onOpenChange={setShowSignatureDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <PenTool className="h-5 w-5 text-purple-600" />
+              Workflow de Signature Électronique
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 bg-purple-50 rounded-lg border-2 border-purple-200">
+                <User className="h-8 w-8 text-purple-600 mb-2" />
+                <p className="font-semibold text-gray-800">Multi-signataires</p>
+                <p className="text-sm text-gray-600">Plusieurs personnes peuvent signer</p>
+              </div>
+              <div className="p-4 bg-indigo-50 rounded-lg border-2 border-indigo-200">
+                <Clock className="h-8 w-8 text-indigo-600 mb-2" />
+                <p className="font-semibold text-gray-800">Signature séquentielle</p>
+                <p className="text-sm text-gray-600">Ordre de signature défini</p>
+              </div>
+              <div className="p-4 bg-pink-50 rounded-lg border-2 border-pink-200">
+                <Zap className="h-8 w-8 text-pink-600 mb-2" />
+                <p className="font-semibold text-gray-800">Rappels automatiques</p>
+                <p className="text-sm text-gray-600">Notifications configurables</p>
+              </div>
+              <div className="p-4 bg-purple-50 rounded-lg border-2 border-purple-200">
+                <CheckCircle className="h-8 w-8 text-green-600 mb-2" />
+                <p className="font-semibold text-gray-800">Vérification</p>
+                <p className="text-sm text-gray-600">Signatures vérifiables</p>
+              </div>
+            </div>
+            <div className="p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
+              <p className="text-sm text-blue-800">
+                <strong>Service:</strong> SignatureService.ts est prêt à gérer les workflows de signature électronique
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Sécurité Avancée */}
+      <Dialog open={showSecurityDialog} onOpenChange={setShowSecurityDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-emerald-600" />
+              Sécurité Avancée
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 bg-red-50 rounded-lg border-2 border-red-200">
+                <Lock className="h-8 w-8 text-red-600 mb-2" />
+                <p className="font-semibold text-gray-800">Chiffrement AES</p>
+                <p className="text-sm text-gray-600">Documents sensibles protégés</p>
+              </div>
+              <div className="p-4 bg-pink-50 rounded-lg border-2 border-pink-200">
+                <FileText className="h-8 w-8 text-pink-600 mb-2" />
+                <p className="font-semibold text-gray-800">Watermark</p>
+                <p className="text-sm text-gray-600">Personnalisable et configurable</p>
+              </div>
+              <div className="p-4 bg-orange-50 rounded-lg border-2 border-orange-200">
+                <Eye className="h-8 w-8 text-orange-600 mb-2" />
+                <p className="font-semibold text-gray-800">Logs d'accès</p>
+                <p className="text-sm text-gray-600">Traçabilité complète</p>
+              </div>
+              <div className="p-4 bg-emerald-50 rounded-lg border-2 border-emerald-200">
+                <FileCheck className="h-8 w-8 text-emerald-600 mb-2" />
+                <p className="font-semibold text-gray-800">Audit complet</p>
+                <p className="text-sm text-gray-600">Rapports de sécurité</p>
+              </div>
+            </div>
+            <div className="p-4 bg-green-50 border-l-4 border-green-500 rounded">
+              <p className="text-sm text-green-800">
+                <strong>Service:</strong> SecurityService.ts gère le chiffrement, watermark et logs d'accès
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Intégrations CRM */}
+      <Dialog open={showIntegrationsDialog} onOpenChange={setShowIntegrationsDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Link2 className="h-5 w-5 text-orange-600" />
+              Intégrations avec Modules CRM
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-200 hover:border-blue-400 cursor-pointer transition-all">
+                <Folder className="h-8 w-8 text-blue-600 mb-2" />
+                <p className="font-semibold text-gray-800">Entreprises</p>
+                <p className="text-sm text-gray-600">145 liens actifs</p>
+              </div>
+              <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border-2 border-purple-200 hover:border-purple-400 cursor-pointer transition-all">
+                <User className="h-8 w-8 text-purple-600 mb-2" />
+                <p className="font-semibold text-gray-800">Contacts</p>
+                <p className="text-sm text-gray-600">523 liens actifs</p>
+              </div>
+              <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border-2 border-green-200 hover:border-green-400 cursor-pointer transition-all">
+                <TrendingUp className="h-8 w-8 text-green-600 mb-2" />
+                <p className="font-semibold text-gray-800">Opportunités</p>
+                <p className="text-sm text-gray-600">89 liens actifs</p>
+              </div>
+              <div className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border-2 border-yellow-200 hover:border-yellow-400 cursor-pointer transition-all">
+                <FileText className="h-8 w-8 text-yellow-600 mb-2" />
+                <p className="font-semibold text-gray-800">Factures</p>
+                <p className="text-sm text-gray-600">234 liens actifs</p>
+              </div>
+              <div className="p-4 bg-gradient-to-br from-red-50 to-pink-50 rounded-lg border-2 border-red-200 hover:border-red-400 cursor-pointer transition-all">
+                <Folder className="h-8 w-8 text-red-600 mb-2" />
+                <p className="font-semibold text-gray-800">Projets</p>
+                <p className="text-sm text-gray-600">67 liens actifs</p>
+              </div>
+              <div className="p-4 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-lg border-2 border-indigo-200 hover:border-indigo-400 cursor-pointer transition-all">
+                <FileJson className="h-8 w-8 text-indigo-600 mb-2" />
+                <p className="font-semibold text-gray-800">Emails</p>
+                <p className="text-sm text-gray-600">1240 liens actifs</p>
+              </div>
+            </div>
+            <div className="p-4 bg-orange-50 border-l-4 border-orange-500 rounded">
+              <p className="text-sm text-orange-800">
+                <strong>Service:</strong> IntegrationService.ts permet de lier les documents à toutes les entités CRM
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Créer un Dossier */}
+      <Dialog open={isCreateFolderOpen} onOpenChange={setIsCreateFolderOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FolderPlus className="h-5 w-5 text-blue-600" />
+              Créer un nouveau dossier
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label className="text-sm font-medium text-gray-700">Nom du dossier</Label>
+              <Input
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                placeholder="Ex: Contrats 2026"
+                className="mt-2"
+              />
+            </div>
+            <div className="p-3 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-800">
+                Le dossier sera créé dans l'arborescence actuelle avec FolderService.ts
+              </p>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setIsCreateFolderOpen(false)}>
+                Annuler
+              </Button>
+              <Button
+                onClick={() => {
+                  if (newFolderName.trim()) {
+                    setGedFolders([...gedFolders, {
+                      id: Date.now().toString(),
+                      name: newFolderName,
+                      count: 0
+                    }]);
+                    setNewFolderName('');
+                    setIsCreateFolderOpen(false);
+                  }
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <FolderPlus className="h-4 w-4 mr-2" />
+                Créer
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

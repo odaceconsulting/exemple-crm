@@ -287,6 +287,311 @@ export interface ApprovalStep {
   actionDate?: Date;
 }
 
+// ========== GED ADVANCED FEATURES ==========
+
+// Folder & Workspace Management
+export interface Folder {
+  id: string;
+  name: string;
+  description?: string;
+  parentId?: string; // null for root folders
+  workspaceId?: string;
+  path: string; // Full path for breadcrumb
+  color?: string;
+  icon?: string;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  permissions: FolderPermission[];
+  metadata?: Record<string, any>;
+}
+
+export interface Workspace {
+  id: string;
+  name: string;
+  description: string;
+  type: 'personal' | 'team' | 'project' | 'client';
+  ownerId: string;
+  members: WorkspaceMember[];
+  folders: Folder[];
+  settings: WorkspaceSettings;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface WorkspaceMember {
+  userId: string;
+  role: 'owner' | 'admin' | 'editor' | 'viewer';
+  joinedAt: Date;
+}
+
+export interface WorkspaceSettings {
+  defaultPermissions: 'private' | 'team' | 'public';
+  allowExternalSharing: boolean;
+  requireApproval: boolean;
+  enableVersioning: boolean;
+  maxFileSize: number; // in MB
+  allowedFileTypes: string[];
+}
+
+export interface FolderPermission {
+  userId?: string;
+  role?: UserRole;
+  permission: 'view' | 'edit' | 'admin';
+  inheritFromParent: boolean;
+}
+
+// Document Templates
+export interface DocumentTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: DocumentCategory;
+  fileUrl: string;
+  thumbnailUrl?: string;
+  customFields: CustomField[];
+  tags: string[];
+  isPublic: boolean;
+  createdBy: string;
+  createdAt: Date;
+  usageCount: number;
+}
+
+// Custom Metadata Fields
+export interface CustomField {
+  id: string;
+  name: string;
+  label: string;
+  type: 'text' | 'number' | 'date' | 'select' | 'multiselect' | 'boolean' | 'url' | 'email';
+  required: boolean;
+  defaultValue?: any;
+  options?: string[]; // For select/multiselect
+  validation?: FieldValidation;
+  displayOrder: number;
+  applicableCategories: DocumentCategory[];
+}
+
+export interface FieldValidation {
+  min?: number;
+  max?: number;
+  pattern?: string; // regex
+  message?: string;
+}
+
+// Enhanced Document Version with Comparison
+export interface DocumentVersionExtended extends DocumentVersion {
+  fileSize: number;
+  checksum: string; // For integrity verification
+  changes: VersionChange[];
+  comparedWith?: string; // Version ID it was compared with
+  diffUrl?: string; // URL to diff visualization
+}
+
+export interface VersionChange {
+  type: 'added' | 'modified' | 'deleted';
+  path: string;
+  description: string;
+  lineNumber?: number;
+}
+
+// Electronic Signature
+export interface Signature {
+  id: string;
+  documentId: string;
+  signerId: string;
+  signerName: string;
+  signerEmail: string;
+  signatureType: 'electronic' | 'digital' | 'handwritten';
+  signatureData: string; // Base64 encoded signature image or certificate
+  signedAt: Date;
+  ipAddress: string;
+  location?: string;
+  certificateId?: string;
+  verified: boolean;
+  verificationMethod?: string;
+}
+
+export interface SignatureWorkflow {
+  id: string;
+  documentId: string;
+  status: 'draft' | 'pending' | 'completed' | 'cancelled' | 'expired';
+  signers: SignatureRequest[];
+  createdBy: string;
+  createdAt: Date;
+  completedAt?: Date;
+  expiresAt?: Date;
+  reminderSchedule?: ReminderSchedule;
+}
+
+export interface SignatureRequest {
+  id: string;
+  userId?: string;
+  email: string;
+  name: string;
+  order: number; // For sequential signing
+  status: 'pending' | 'signed' | 'declined' | 'expired';
+  sentAt?: Date;
+  signedAt?: Date;
+  signature?: Signature;
+  message?: string;
+}
+
+export interface ReminderSchedule {
+  frequency: 'daily' | 'every_2_days' | 'weekly';
+  maxReminders: number;
+  sentCount: number;
+}
+
+// Document Notifications
+export interface DocumentNotification {
+  id: string;
+  documentId: string;
+  userId: string;
+  type: 'upload' | 'update' | 'share' | 'comment' | 'approval' | 'signature' | 'expiration' | 'access';
+  title: string;
+  message: string;
+  actionUrl?: string;
+  read: boolean;
+  readAt?: Date;
+  createdAt: Date;
+  metadata?: Record<string, any>;
+}
+
+// Security Features
+export interface DocumentSecurity {
+  documentId: string;
+  encrypted: boolean;
+  encryptionAlgorithm?: string;
+  watermark?: Watermark;
+  downloadRestricted: boolean;
+  printRestricted: boolean;
+  expiryDate?: Date;
+  accessLog: AccessLog[];
+}
+
+export interface Watermark {
+  text: string;
+  opacity: number; // 0-1
+  rotation: number; // degrees
+  position: 'center' | 'diagonal' | 'header' | 'footer';
+  color: string;
+  fontSize: number;
+}
+
+export interface AccessLog {
+  id: string;
+  documentId: string;
+  userId: string;
+  action: 'view' | 'download' | 'edit' | 'share' | 'delete' | 'print';
+  timestamp: Date;
+  ipAddress: string;
+  userAgent: string;
+  success: boolean;
+  details?: string;
+}
+
+// Advanced Search
+export interface SearchFilter {
+  field: string;
+  operator: 'equals' | 'contains' | 'startsWith' | 'endsWith' | 'greater' | 'less' | 'between' | 'in';
+  value: any;
+  type: 'text' | 'number' | 'date' | 'boolean' | 'select';
+}
+
+export interface SavedSearch {
+  id: string;
+  name: string;
+  userId: string;
+  filters: SearchFilter[];
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  isPublic: boolean;
+  createdAt: Date;
+  lastUsed?: Date;
+  usageCount: number;
+}
+
+export interface SearchSuggestion {
+  type: 'document' | 'folder' | 'tag' | 'user' | 'company';
+  id: string;
+  title: string;
+  subtitle?: string;
+  score: number; // Relevance score
+  highlight?: string; // Highlighted matching text
+}
+
+// Upload Management
+export interface UploadTask {
+  id: string;
+  files: UploadFile[];
+  folderId?: string;
+  workspaceId?: string;
+  status: 'pending' | 'uploading' | 'processing' | 'completed' | 'failed';
+  totalSize: number;
+  uploadedSize: number;
+  progress: number; // 0-100
+  startedAt: Date;
+  completedAt?: Date;
+  errors?: UploadError[];
+}
+
+export interface UploadFile {
+  id: string;
+  file: File;
+  name: string;
+  size: number;
+  type: string;
+  status: 'pending' | 'uploading' | 'processing' | 'completed' | 'failed';
+  progress: number;
+  uploadedSize: number;
+  compressed: boolean;
+  originalSize?: number;
+  error?: string;
+  documentId?: string; // After successful upload
+}
+
+export interface UploadError {
+  fileId: string;
+  fileName: string;
+  error: string;
+  timestamp: Date;
+}
+
+// Cloud Integration
+export interface CloudProvider {
+  id: string;
+  name: 'google_drive' | 'dropbox' | 'onedrive' | 'box';
+  displayName: string;
+  connected: boolean;
+  userId: string;
+  accessToken?: string;
+  refreshToken?: string;
+  expiresAt?: Date;
+  settings: CloudProviderSettings;
+}
+
+export interface CloudProviderSettings {
+  autoSync: boolean;
+  syncFolderId?: string;
+  syncInterval?: number; // minutes
+  lastSync?: Date;
+}
+
+// Document Integrations
+export interface DocumentLink {
+  id: string;
+  documentId: string;
+  linkedTo: {
+    type: 'company' | 'contact' | 'opportunity' | 'invoice' | 'project' | 'employee' | 'email';
+    id: string;
+    name: string;
+  };
+  linkType: 'attachment' | 'reference' | 'related';
+  createdBy: string;
+  createdAt: Date;
+  metadata?: Record<string, any>;
+}
+
 // ========== FACTURATION & FINANCIER ==========
 export interface Invoice {
   id: string;
