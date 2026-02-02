@@ -52,6 +52,13 @@ import {
   CloudUpload,
   Database
 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/components/ui/select";
 import { Document as DocumentType, DocumentVersion, AccessRight, ApprovalWorkflow } from '@/app/types';
 import { folderService } from '@/app/services/FolderService';
 import { uploadService } from '@/app/services/UploadService';
@@ -82,6 +89,16 @@ const Documents = () => {
   const [newFolderName, setNewFolderName] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
+  // Upload form state
+  const [uploadFormData, setUploadFormData] = useState({
+    selectedFolder: '',
+    documentName: '',
+    uploadFile: null as File | null,
+    companyName: '',
+    documentStatus: 'pending'
+  });
+  const [uploadProgressValue, setUploadProgressValue] = useState(0);
+
   // New GED features dialogs
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
   const [showSecurityDialog, setShowSecurityDialog] = useState(false);
@@ -92,7 +109,16 @@ const Documents = () => {
     { id: '3', name: 'Projets', count: 8 },
     { id: '4', name: 'RH', count: 23 }
   ]);
-  const [uploadProgressValue, setUploadProgressValue] = useState(0);
+
+  // Liste des entreprises disponibles
+  const companies = [
+    'Acme Corporation',
+    'TechStart SAS',
+    'Global Industries',
+    'Innovation Labs',
+    'Digital Solutions',
+    'Smart Tech SARL'
+  ];
   const [searchSuggestionsVisible, setSearchSuggestionsVisible] = useState(false);
   const [searchSuggestionsList, setSearchSuggestionsList] = useState<any[]>([]);
 
@@ -359,6 +385,42 @@ const Documents = () => {
       default:
         return status;
     }
+  };
+
+  const handleUploadDocument = () => {
+    if (!uploadFormData.selectedFolder || !uploadFormData.documentName || !uploadFormData.uploadFile) {
+      alert('Veuillez remplir tous les champs');
+      return;
+    }
+
+    setUploadProgressValue(0);
+    const interval = setInterval(() => {
+      setUploadProgressValue(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          // Mise à jour du dossier avec le nouveau fichier
+          setGedFolders(gedFolders.map(f =>
+            f.id === uploadFormData.selectedFolder
+              ? { ...f, count: f.count + 1 }
+              : f
+          ));
+          // Réinitialisation du formulaire
+          setTimeout(() => {
+            setIsUploadDialogOpen(false);
+            setUploadFormData({
+              selectedFolder: '',
+              documentName: '',
+              uploadFile: null,
+              companyName: '',
+              documentStatus: 'pending'
+            });
+            setUploadProgressValue(0);
+          }, 500);
+          return 100;
+        }
+        return prev + 10;
+      });
+    }, 200);
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -1669,6 +1731,154 @@ const Documents = () => {
               <p className="text-sm text-orange-800">
                 <strong>Service:</strong> IntegrationService.ts permet de lier les documents à toutes les entités CRM
               </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Téléverser un Document */}
+      <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Upload className="h-6 w-6 text-blue-600" />
+              Téléverser un Document
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            {/* Première ligne - Dossier et Entreprise */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Sélection du dossier */}
+              <div>
+                <Label htmlFor="folder-select" className="text-base font-semibold mb-3 block">
+                  📁 Dossier Destination
+                </Label>
+                <Select value={uploadFormData.selectedFolder} onValueChange={(value) => setUploadFormData({ ...uploadFormData, selectedFolder: value })}>
+                  <SelectTrigger className="w-full border-2 border-gray-300 h-11">
+                    <SelectValue placeholder="-- Choisir un dossier --" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {gedFolders.map((folder) => (
+                      <SelectItem key={folder.id} value={folder.id}>
+                        📁 {folder.name} ({folder.count} fichiers)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Nom de l'entreprise */}
+              <div>
+                <Label htmlFor="company-name" className="text-base font-semibold mb-3 block">
+                  🏢 Nom de l'Entreprise
+                </Label>
+                <Select value={uploadFormData.companyName} onValueChange={(value) => setUploadFormData({ ...uploadFormData, companyName: value })}>
+                  <SelectTrigger className="w-full border-2 border-gray-300 h-11">
+                    <SelectValue placeholder="-- Sélectionner une entreprise --" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {companies.map((company) => (
+                      <SelectItem key={company} value={company}>
+                        {company}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Deuxième ligne - Document et Statut */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Nom du document */}
+              <div>
+                <Label htmlFor="doc-name" className="text-base font-semibold mb-3 block">
+                  📄 Nom du Document
+                </Label>
+                <Input
+                  id="doc-name"
+                  value={uploadFormData.documentName}
+                  onChange={(e) => setUploadFormData({ ...uploadFormData, documentName: e.target.value })}
+                  placeholder="Ex: Contrat_Acme_2026.pdf"
+                  className="h-10 border-2 border-gray-300"
+                />
+              </div>
+
+              {/* Statut du document */}
+              <div>
+                <Label htmlFor="doc-status" className="text-base font-semibold mb-3 block">
+                  ✅ Statut du Document
+                </Label>
+                <Select value={uploadFormData.documentStatus} onValueChange={(value) => setUploadFormData({ ...uploadFormData, documentStatus: value })}>
+                  <SelectTrigger className="w-full border-2 border-gray-300 h-11">
+                    <SelectValue placeholder="-- Sélectionner un statut --" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">⏳ En attente</SelectItem>
+                    <SelectItem value="approved">✅ Approuvé</SelectItem>
+                    <SelectItem value="rejected">❌ Rejeté</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Zone de dépôt de fichier - Pleine largeur */}
+            <div>
+              <Label className="text-base font-semibold mb-3 block">
+                ⬆️ Fichier à Téléverser
+              </Label>
+              <label className="border-2 border-dashed border-blue-300 bg-blue-50 p-10 text-center rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-100 transition-all block w-full">
+                <File className="h-14 w-14 text-blue-500 mx-auto mb-3" />
+                <p className="font-semibold text-gray-700 text-lg">Glissez-déposez votre fichier</p>
+                <p className="text-sm text-gray-500 mt-2">ou cliquez pour sélectionner un fichier</p>
+                <p className="text-xs text-gray-400 mt-3 leading-relaxed">
+                  Formats acceptés: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, JPG, PNG<br/>
+                  {uploadFormData.uploadFile ? `✅ Fichier sélectionné: ${uploadFormData.uploadFile.name}` : 'Compression automatique si le fichier dépasse 1MB'}
+                </p>
+                <input
+                  type="file"
+                  onChange={(e) => setUploadFormData({ ...uploadFormData, uploadFile: e.target.files?.[0] || null })}
+                  className="hidden"
+                />
+              </label>
+            </div>
+
+            {/* Barre de progression */}
+            {uploadProgressValue > 0 && (
+              <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
+                <div className="flex justify-between text-sm mb-3">
+                  <span className="font-semibold text-blue-900">Téléversement en cours...</span>
+                  <span className="text-blue-600 font-bold">{uploadProgressValue}%</span>
+                </div>
+                <Progress value={uploadProgressValue} className="h-3" />
+              </div>
+            )}
+
+            {/* Boutons d'action */}
+            <div className="flex gap-3 justify-end pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsUploadDialogOpen(false);
+                  setUploadFormData({
+                    selectedFolder: '',
+                    documentName: '',
+                    uploadFile: null,
+                    companyName: '',
+                    documentStatus: 'pending'
+                  });
+                  setUploadProgressValue(0);
+                }}
+              >
+                Annuler
+              </Button>
+              <Button
+                onClick={handleUploadDocument}
+                disabled={!uploadFormData.selectedFolder || !uploadFormData.documentName || !uploadFormData.uploadFile}
+                className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white disabled:opacity-50"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Téléverser
+              </Button>
             </div>
           </div>
         </DialogContent>

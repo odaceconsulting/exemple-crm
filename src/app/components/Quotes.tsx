@@ -508,7 +508,6 @@ const Quotes = () => {
     email: '',
     phone: '',
     expiryDate: '',
-    expiryDate: '',
     taxRate: '20',
     notes: '',
     items: [] as QuoteItem[]

@@ -9,6 +9,13 @@ import { Input } from '@/app/components/ui/input';
 import { Progress } from '@/app/components/ui/progress';
 import { Label } from '@/app/components/ui/label';
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/app/components/ui/select";
+import {
     FolderPlus,
     FolderOpen,
     Upload,
@@ -30,7 +37,8 @@ import {
     Mail,
     Building2,
     Briefcase,
-    TrendingUp
+    TrendingUp,
+    File
 } from 'lucide-react';
 
 /**
@@ -54,6 +62,9 @@ export default function GEDEnhancedPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [newFolderName, setNewFolderName] = useState('');
+    const [selectedFolder, setSelectedFolder] = useState('');
+    const [documentName, setDocumentName] = useState('');
+    const [uploadFile, setUploadFile] = useState<File | null>(null);
 
     const handleCreateFolder = () => {
         if (newFolderName.trim()) {
@@ -68,12 +79,30 @@ export default function GEDEnhancedPage() {
     };
 
     const handleUpload = () => {
+        if (!selectedFolder || !documentName || !uploadFile) {
+            alert('Veuillez remplir tous les champs');
+            return;
+        }
+
         setUploadProgress(0);
         const interval = setInterval(() => {
             setUploadProgress(prev => {
                 if (prev >= 100) {
                     clearInterval(interval);
-                    setTimeout(() => setShowUpload(false), 500);
+                    // Mettre à jour le dossier avec le nouveau fichier
+                    setFolders(folders.map(f => 
+                        f.id === selectedFolder 
+                            ? { ...f, count: f.count + 1 }
+                            : f
+                    ));
+                    // Afficher un message de succès
+                    setTimeout(() => {
+                        setShowUpload(false);
+                        setSelectedFolder('');
+                        setDocumentName('');
+                        setUploadFile(null);
+                        setUploadProgress(0);
+                    }, 500);
                     return 100;
                 }
                 return prev + 10;
@@ -282,28 +311,100 @@ export default function GEDEnhancedPage() {
             </Dialog>
 
             <Dialog open={showUpload} onOpenChange={setShowUpload}>
-                <DialogContent>
+                <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                        <DialogTitle>Upload Avancé</DialogTitle>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Upload className="h-6 w-6 text-green-600" />
+                            Téléverser un Document
+                        </DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        <div className="border-2 border-dashed p-8 text-center rounded-lg">
-                            <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                            <p>Glissez-déposez vos fichiers</p>
-                            <p className="text-sm text-gray-500">Compression auto &gt; 1MB</p>
+                    <div className="space-y-6 py-4">
+                        {/* Sélection du dossier */}
+                        <div>
+                            <Label htmlFor="folder-select" className="text-base font-semibold mb-3 block">
+                                📁 Dossier Destination
+                            </Label>
+                            <Select value={selectedFolder} onValueChange={setSelectedFolder}>
+                                <SelectTrigger className="w-full border-2 border-gray-300 h-11">
+                                    <SelectValue placeholder="-- Choisir un dossier --" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {folders.map((folder) => (
+                                        <SelectItem key={folder.id} value={folder.id}>
+                                            📁 {folder.name} ({folder.count} fichiers)
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
+
+                        {/* Nom du document */}
+                        <div>
+                            <Label htmlFor="doc-name" className="text-base font-semibold mb-3 block">
+                                📄 Nom du Document
+                            </Label>
+                            <Input
+                                id="doc-name"
+                                value={documentName}
+                                onChange={(e) => setDocumentName(e.target.value)}
+                                placeholder="Ex: Contrat_Acme_2026.pdf"
+                                className="h-10 border-2 border-gray-300"
+                            />
+                        </div>
+
+                        {/* Zone de dépôt de fichier */}
+                        <div>
+                            <Label className="text-base font-semibold mb-3 block">
+                                ⬆️ Fichier à Téléverser
+                            </Label>
+                            <label className="border-2 border-dashed border-green-300 bg-green-50 p-8 text-center rounded-lg cursor-pointer hover:border-green-500 hover:bg-green-100 transition-all">
+                                <File className="h-12 w-12 text-green-500 mx-auto mb-3" />
+                                <p className="font-semibold text-gray-700">Glissez-déposez votre fichier</p>
+                                <p className="text-sm text-gray-500 mt-1">ou cliquez pour sélectionner</p>
+                                <p className="text-xs text-gray-400 mt-2">
+                                    {uploadFile ? `✅ ${uploadFile.name}` : 'Compression auto si > 1MB'}
+                                </p>
+                                <input
+                                    type="file"
+                                    onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                                    className="hidden"
+                                />
+                            </label>
+                        </div>
+
+                        {/* Barre de progression */}
                         {uploadProgress > 0 && (
-                            <div>
-                                <div className="flex justify-between text-sm mb-2">
-                                    <span>Upload...</span>
-                                    <span>{uploadProgress}%</span>
+                            <div className="bg-blue-50 p-4 rounded-lg">
+                                <div className="flex justify-between text-sm mb-3">
+                                    <span className="font-semibold">Téléversement en cours...</span>
+                                    <span className="text-green-600 font-bold">{uploadProgress}%</span>
                                 </div>
-                                <Progress value={uploadProgress} />
+                                <Progress value={uploadProgress} className="h-3" />
                             </div>
                         )}
-                        <div className="flex gap-3 justify-end">
-                            <Button variant="outline" onClick={() => setShowUpload(false)}>Annuler</Button>
-                            <Button onClick={handleUpload}>Démarrer</Button>
+
+                        {/* Boutons d'action */}
+                        <div className="flex gap-3 justify-end pt-4 border-t">
+                            <Button 
+                                variant="outline" 
+                                onClick={() => {
+                                    setShowUpload(false);
+                                    setSelectedFolder('');
+                                    setDocumentName('');
+                                    setUploadFile(null);
+                                    setUploadProgress(0);
+                                }}
+                            >
+                                Annuler
+                            </Button>
+                            <Button 
+                                onClick={handleUpload}
+                                disabled={!selectedFolder || !documentName || !uploadFile}
+                                className="bg-gradient-to-r from-green-500 to-emerald-500 text-white disabled:opacity-50"
+                            >
+                                <Upload className="h-4 w-4 mr-2" />
+                                Téléverser
+                            </Button>
                         </div>
                     </div>
                 </DialogContent>
